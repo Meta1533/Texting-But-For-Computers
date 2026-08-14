@@ -1,0 +1,132 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #111827;
+  color: white;
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 280px;
+  background: #1f2937;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  margin-top: 0;
+  margin-bottom: 25px;
+}
+
+.friend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.friend:hover,
+.friend.active {
+  background: #374151;
+}
+
+.friend p,
+.chat-header p {
+  margin: 3px 0 0;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #6366f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  background: #1f2937;
+  border-bottom: 1px solid #374151;
+}
+
+.chat-header h3 {
+  margin: 0;
+}
+
+.messages {
+  flex: 1;
+  padding: 25px;
+  overflow-y: auto;
+}
+
+.message {
+  width: fit-content;
+  max-width: 60%;
+  padding: 10px 14px;
+  border-radius: 15px;
+  margin-bottom: 12px;
+}
+
+.received {
+  background: #374151;
+}
+
+.sent {
+  background: #6366f1;
+  margin-left: auto;
+}
+
+.message-box {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  background: #1f2937;
+}
+
+.message-box input {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #374151;
+  color: white;
+  outline: none;
+}
+
+.message-box button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #6366f1;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.message-box button:hover {
+  background: #4f46e5;
+}

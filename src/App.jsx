@@ -19,7 +19,7 @@ const BANNED_WORDS = [
 
  "suck",
 
-"ass",
+"ass ",
 "shit",
 "sex",
 "cunt",
@@ -27,7 +27,7 @@ const BANNED_WORDS = [
 "arse",
 "dick",
 "damn",
-"hell",
+"hell ",
 "god",
 "nigga",
 "dammit",

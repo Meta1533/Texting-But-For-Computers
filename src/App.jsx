@@ -92,7 +92,7 @@ function Chat({ user }) {
   const [groupMembers, setGroupMembers] = useState([]);
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [memberError, setMemberError] = useState("");
-  
+  const [unreadCounts, setUnreadCounts] = useState({});
   useEffect(() => {
   async function loadProfile() {
     const { data, error } = await supabase
@@ -134,6 +134,27 @@ useEffect(() => {
 
   loadContacts();
 }, [user.id]);
+
+useEffect(() => {
+  async function loadUnread() {
+    const { data } = await supabase
+      .from("messages")
+      .select("user_id")
+      .eq("recipient_id", user.id)
+      .is("read_at", null);
+
+    const counts = {};
+
+    (data || []).forEach((msg) => {
+      counts[msg.user_id] = (counts[msg.user_id] || 0) + 1;
+    });
+
+    setUnreadCounts(counts);
+  }
+
+  loadUnread();
+}, [user.id]);
+
 
 useEffect(() => {
   async function loadGroups() {
@@ -282,7 +303,44 @@ useEffect(() => {
         setMessages([]);
         return;
       }
+useEffect(() => {
+  const channel = supabase
+    .channel(`unread-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `recipient_id=eq.${user.id}`,
+      },
+      (payload) => {
+        const newMessage = payload.new;
 
+        // If you're currently talking to this person,
+        // don't show an unread number.
+        if (
+          selectedContact &&
+          selectedContact.id === newMessage.user_id &&
+          !selectedGroup
+        ) {
+          return;
+        }
+
+        // Otherwise, increase their unread number.
+        setUnreadCounts((current) => ({
+          ...current,
+          [newMessage.user_id]:
+            (current[newMessage.user_id] || 0) + 1,
+        }));
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [user.id, selectedContact, selectedGroup]);
       const userIds = [...new Set(data.map((msg) => msg.user_id))];
 
       const { data: profiles, error: profilesError } = await supabase
@@ -389,7 +447,44 @@ useEffect(() => {
   };
 }, [selectedContact, selectedGroup, user.id]);
 
+useEffect(() => {
+  const channel = supabase
+    .channel(`unread-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `recipient_id=eq.${user.id}`,
+      },
+      (payload) => {
+        const newMessage = payload.new;
 
+        // If you're currently talking to this person,
+        // don't show an unread number.
+        if (
+          selectedContact &&
+          selectedContact.id === newMessage.user_id &&
+          !selectedGroup
+        ) {
+          return;
+        }
+
+        // Otherwise, increase their unread number.
+        setUnreadCounts((current) => ({
+          ...current,
+          [newMessage.user_id]:
+            (current[newMessage.user_id] || 0) + 1,
+        }));
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [user.id, selectedContact, selectedGroup]);
   
   async function sendMessage() {
     if (selectedGroup) {
@@ -1061,16 +1156,36 @@ setMemberError("");
   <div
     className="contact-item"
     key={contact.id}
-    onClick={() => {
+    onClick={async () => {
   setSelectedContact(contact.profiles);
   setSelectedGroup(null);
+
+  await supabase
+    .from("messages")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", contact.profiles.id)
+    .eq("recipient_id", user.id)
+    .is("read_at", null);
+
+  setUnreadCounts((current) => ({
+    ...current,
+    [contact.profiles.id]: 0,
+  }));
 }}
   >
     <div className="avatar">
       {contact.profiles.username.charAt(0).toUpperCase()}
     </div>
 
-    <strong>{contact.profiles.username}</strong>
+    <div className="contact-name-row">
+  <strong>{contact.profiles.username}</strong>
+
+  {unreadCounts[contact.profiles.id] > 0 && (
+    <span className="unread-badge">
+      {unreadCounts[contact.profiles.id]}
+    </span>
+  )}
+</div>
 
 <button
   onClick={(event) => {

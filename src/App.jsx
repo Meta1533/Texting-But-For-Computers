@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { supabase } from "./supabase";
 import Auth from "./Auth";
@@ -93,6 +93,7 @@ function Chat({ user }) {
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [memberError, setMemberError] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
+  const messagesEndRef = useRef(null);
   useEffect(() => {
   async function loadProfile() {
     const { data, error } = await supabase
@@ -134,6 +135,12 @@ useEffect(() => {
 
   loadContacts();
 }, [user.id]);
+
+useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({
+    behavior: "auto",
+  });
+}, [selectedContact, selectedGroup, messages]);
 
 useEffect(() => {
   async function loadUnread() {
@@ -1228,6 +1235,8 @@ setMemberError("");
       </div>
     </div>
   ))}
+
+  <div ref={messagesEndRef} />
 </section>
 
         <div className="message-box">

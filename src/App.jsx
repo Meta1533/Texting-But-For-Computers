@@ -281,14 +281,13 @@ useEffect(() => {
 
   loadGroupMessages();
 }, [selectedGroup, user.id]);
-
 useEffect(() => {
   if (!selectedGroup) {
     return;
   }
 
   const channel = supabase
-    .channel(`group-messages-${selectedGroup.id}`)
+    .channel(`group-${selectedGroup.id}`)
     .on(
       "postgres_changes",
       {
@@ -297,28 +296,13 @@ useEffect(() => {
         table: "group_messages",
         filter: `group_id=eq.${selectedGroup.id}`,
       },
-      async (payload) => {
+      (payload) => {
         const msg = payload.new;
 
-        console.log("Group realtime message:", msg);
-
-        // Get the sender's username
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("id, username")
-          .eq("id", msg.user_id)
-          .single();
-
-        if (error) {
-          console.error(
-            "Error loading realtime message profile:",
-            error
-          );
-        }
+        console.log("NEW GROUP MESSAGE:", msg);
 
         setMessages((currentMessages) => {
-          // Prevent duplicate messages
-          if (currentMessages.some((existing) => existing.id === msg.id)) {
+          if (currentMessages.some((m) => m.id === msg.id)) {
             return currentMessages;
           }
 
@@ -329,27 +313,21 @@ useEffect(() => {
               text: msg.content,
               sent: msg.user_id === user.id,
               userId: msg.user_id,
-              username: profile?.username || "Unknown user",
+              username: "Loading...",
               createdAt: msg.created_at,
             },
           ];
         });
       }
     )
-    .subscribe((status, error) => {
-      console.log("Group realtime status:", status);
-
-      if (error) {
-        console.error("Group realtime error:", error);
-      }
+    .subscribe((status) => {
+      console.log("Group realtime:", status);
     });
 
   return () => {
     supabase.removeChannel(channel);
   };
 }, [selectedGroup, user.id]);
-
-
 useEffect(() => {
   async function loadConversation() {
     if (!selectedContact || selectedGroup) {

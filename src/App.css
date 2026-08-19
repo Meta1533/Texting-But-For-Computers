@@ -797,3 +797,35 @@ button {
   font-size: 11px;
   font-weight: bold;
 }
+.message-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.message-wrapper.sent {
+  align-items: flex-end;
+}
+
+.message-wrapper.received {
+  align-items: flex-start;
+}
+
+.message-sender {
+  font-size: 12px;
+  font-weight: 600;
+  color: #777;
+  margin-bottom: 3px;
+  padding: 0 6px;
+}
+
+[data-theme="dark"] .message-sender {
+  color: #aaa;
+}
+
+.message {
+  max-width: 70%;
+  padding: 9px 13px;
+  border-radius: 12px;
+  word-wrap: break-word;
+}

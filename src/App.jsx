@@ -240,6 +240,7 @@ useEffect(() => {
 
     if (error) {
       console.error("Error loading group messages:", error);
+      setMessages([]);
       return;
     }
 
@@ -256,16 +257,23 @@ useEffect(() => {
       .in("id", userIds);
 
     if (profilesError) {
-      console.error("Error loading group message profiles:", profilesError);
+      console.error(
+        "Error loading group message profiles:",
+        profilesError
+      );
+      setMessages([]);
       return;
     }
 
     const messagesWithUsers = data.map((msg) => ({
+      id: msg.id,
       text: msg.content,
       sent: msg.user_id === user.id,
+      userId: msg.user_id,
       username:
         profiles.find((profile) => profile.id === msg.user_id)?.username ||
         "Unknown user",
+      createdAt: msg.created_at,
     }));
 
     setMessages(messagesWithUsers);
@@ -274,131 +282,107 @@ useEffect(() => {
   loadGroupMessages();
 }, [selectedGroup, user.id]);
 
-
 useEffect(() => {
-  async function loadConversation() {
-    // Nothing selected
-    if (!selectedContact && !selectedGroup) {
-      setMessages([]);
-      return;
-    }
+  if (!selectedGroup) {
+    return;
+  }
 
-    // =========================
-    // GROUP CHAT
-    // =========================
-    if (selectedGroup) {
-      const { data, error } = await supabase
-        .from("group_messages")
-        .select("id, group_id, user_id, content, created_at")
-        .eq("group_id", selectedGroup.id)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("Error loading group messages:", error);
-        setMessages([]);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        setMessages([]);
-        return;
-      }
-useEffect(() => {
   const channel = supabase
-    .channel(`unread-${user.id}`)
+    .channel(`group-messages-${selectedGroup.id}`)
     .on(
       "postgres_changes",
       {
         event: "INSERT",
         schema: "public",
-        table: "messages",
-        filter: `recipient_id=eq.${user.id}`,
+        table: "group_messages",
+        filter: `group_id=eq.${selectedGroup.id}`,
       },
-      (payload) => {
-        const newMessage = payload.new;
+      async (payload) => {
+        const msg = payload.new;
 
-        // If you're currently talking to this person,
-        // don't show an unread number.
-        if (
-          selectedContact &&
-          selectedContact.id === newMessage.user_id &&
-          !selectedGroup
-        ) {
-          return;
+        console.log("Group realtime message:", msg);
+
+        // Get the sender's username
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .eq("id", msg.user_id)
+          .single();
+
+        if (error) {
+          console.error(
+            "Error loading realtime message profile:",
+            error
+          );
         }
 
-        // Otherwise, increase their unread number.
-        setUnreadCounts((current) => ({
-          ...current,
-          [newMessage.user_id]:
-            (current[newMessage.user_id] || 0) + 1,
-        }));
+        setMessages((currentMessages) => {
+          // Prevent duplicate messages
+          if (currentMessages.some((existing) => existing.id === msg.id)) {
+            return currentMessages;
+          }
+
+          return [
+            ...currentMessages,
+            {
+              id: msg.id,
+              text: msg.content,
+              sent: msg.user_id === user.id,
+              userId: msg.user_id,
+              username: profile?.username || "Unknown user",
+              createdAt: msg.created_at,
+            },
+          ];
+        });
       }
     )
-    .subscribe();
+    .subscribe((status, error) => {
+      console.log("Group realtime status:", status);
+
+      if (error) {
+        console.error("Group realtime error:", error);
+      }
+    });
 
   return () => {
     supabase.removeChannel(channel);
   };
-}, [user.id, selectedContact, selectedGroup]);
-      const userIds = [...new Set(data.map((msg) => msg.user_id))];
+}, [selectedGroup, user.id]);
 
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, username")
-        .in("id", userIds);
 
-      if (profilesError) {
-        console.error(
-          "Error loading group message profiles:",
-          profilesError
-        );
-        setMessages([]);
-        return;
-      }
-
-      const messagesWithUsers = data.map((msg) => ({
-        text: msg.content,
-        sent: msg.user_id === user.id,
-        username:
-          profiles.find((profile) => profile.id === msg.user_id)?.username ||
-          "Unknown user",
-      }));
-
-      setMessages(messagesWithUsers);
+useEffect(() => {
+  async function loadConversation() {
+    if (!selectedContact || selectedGroup) {
       return;
     }
 
-    // =========================
-    // PRIVATE CHAT
-    // =========================
-    if (selectedContact) {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .order("created_at", { ascending: true });
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .order("created_at", { ascending: true });
 
-      if (error) {
-        console.error("Error loading private messages:", error);
-        setMessages([]);
-        return;
-      }
-
-      const conversationMessages = (data || [])
-        .filter(
-          (msg) =>
-            (msg.user_id === user.id &&
-              msg.recipient_id === selectedContact.id) ||
-            (msg.user_id === selectedContact.id &&
-              msg.recipient_id === user.id)
-        )
-        .map((msg) => ({
-          text: msg.content,
-          sent: msg.user_id === user.id,
-        }));
-
-      setMessages(conversationMessages);
+    if (error) {
+      console.error("Error loading private messages:", error);
+      setMessages([]);
+      return;
     }
+
+    const conversationMessages = (data || [])
+      .filter(
+        (msg) =>
+          (msg.user_id === user.id &&
+            msg.recipient_id === selectedContact.id) ||
+          (msg.user_id === selectedContact.id &&
+            msg.recipient_id === user.id)
+      )
+      .map((msg) => ({
+        id: msg.id,
+        text: msg.content,
+        sent: msg.user_id === user.id,
+        createdAt: msg.created_at,
+      }));
+
+    setMessages(conversationMessages);
   }
 
   loadConversation();
@@ -446,6 +430,75 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [selectedContact, selectedGroup, user.id]);
+
+useEffect(() => {
+  if (!selectedGroup) {
+    return;
+  }
+
+  const channel = supabase
+    .channel(`group-messages-${selectedGroup.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "group_messages",
+        filter: `group_id=eq.${selectedGroup.id}`,
+      },
+      async (payload) => {
+        const msg = payload.new;
+
+        console.log("Group realtime message:", msg);
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .eq("id", msg.user_id)
+          .single();
+
+        if (error) {
+          console.error(
+            "Error loading realtime message profile:",
+            error
+          );
+        }
+
+        setMessages((currentMessages) => {
+          if (
+            currentMessages.some(
+              (existing) => existing.id === msg.id
+            )
+          ) {
+            return currentMessages;
+          }
+
+          return [
+            ...currentMessages,
+            {
+              id: msg.id,
+              text: msg.content,
+              sent: msg.user_id === user.id,
+              userId: msg.user_id,
+              username: profile?.username || "Unknown user",
+              createdAt: msg.created_at,
+            },
+          ];
+        });
+      }
+    )
+    .subscribe((status, error) => {
+      console.log("Group realtime status:", status);
+
+      if (error) {
+        console.error("Group realtime error:", error);
+      }
+    });
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [selectedGroup, user.id]);
 
 useEffect(() => {
   const channel = supabase
@@ -1233,14 +1286,20 @@ setMemberError("");
           </div>
         </header>
 
-        <section className="messages">
+       <section className="messages">
   {messages.map((msg, index) => (
     <div
-      key={index}
+      key={msg.id || index}
       className={`message-wrapper ${
         msg.sent ? "sent" : "received"
       }`}
     >
+      {selectedGroup && (
+        <div className="message-sender">
+          {msg.username}
+        </div>
+      )}
+
       <div className="message">
         {msg.text}
       </div>

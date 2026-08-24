@@ -94,6 +94,9 @@ function Chat({ user }) {
   const [memberError, setMemberError] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
   const messagesEndRef = useRef(null);
+ 
+  console.log("CURRENT USER ID:", user.id);
+
   useEffect(() => {
   async function loadProfile() {
     const { data, error } = await supabase
@@ -118,41 +121,23 @@ function Chat({ user }) {
 }, [user.id]);
 
 useEffect(() => {
-  async function loadContacts() {
-    const { data, error } = await supabase
-      .from("contacts")
-      .select("id, contact_id, profiles:contact_id(id, username)")
-      .eq("user_id", user.id);
-
-    if (error) {
-      console.error("Error loading contacts:", error);
-      return;
-    }
-
-    setContacts(data || []);
-    console.log("My contacts:", data);
-  }
-
-  loadContacts();
-}, [user.id]);
-
-useEffect(() => {
-  messagesEndRef.current?.scrollIntoView({
-    behavior: "auto",
-  });
-}, [selectedContact, selectedGroup, messages]);
-
-useEffect(() => {
   async function loadUnread() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("messages")
       .select("user_id")
       .eq("recipient_id", user.id)
       .is("read_at", null);
 
+    if (error) {
+      console.error("Error loading unread messages:", error);
+      return;
+    }
+
     const counts = {};
 
     (data || []).forEach((msg) => {
+      if (msg.user_id === user.id) return;
+
       counts[msg.user_id] = (counts[msg.user_id] || 0) + 1;
     });
 
@@ -1143,12 +1128,17 @@ setMemberError("");
   setSelectedContact(contact.profiles);
   setSelectedGroup(null);
 
-  await supabase
+  const { error } = await supabase
     .from("messages")
     .update({ read_at: new Date().toISOString() })
     .eq("user_id", contact.profiles.id)
     .eq("recipient_id", user.id)
     .is("read_at", null);
+
+  if (error) {
+    console.error("Error marking messages as read:", error);
+    return;
+  }
 
   setUnreadCounts((current) => ({
     ...current,

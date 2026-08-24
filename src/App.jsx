@@ -120,6 +120,26 @@ function Chat({ user }) {
   loadProfile();
 }, [user.id]);
 
+// Load contacts
+useEffect(() => {
+  async function loadContacts() {
+    const { data, error } = await supabase
+      .from("contacts")
+      .select("id, contact_id, profiles:contact_id(id, username)")
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("Error loading contacts:", error);
+      return;
+    }
+
+    setContacts(data || []);
+    console.log("My contacts:", data);
+  }
+
+  loadContacts();
+}, [user.id]);
+
 useEffect(() => {
   async function loadUnread() {
     const { data, error } = await supabase

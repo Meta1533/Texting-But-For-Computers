@@ -523,17 +523,20 @@ useEffect(() => {
 
   console.log("Logged in user:", user.id);
 
-  const { error } = await supabase
+  const { data: updatedMessages, error } = await supabase
   .from("messages")
-  .insert({
-    content: messageToSend,
-    user_id: user.id,
-    recipient_id: selectedContact.id,
-  });
-  if (error) {
-    console.error("Error sending message:", error);
-    return;
-  }
+  .update({ read_at: new Date().toISOString() })
+  .eq("user_id", contact.profiles.id)
+  .eq("recipient_id", user.id)
+  .is("read_at", null)
+  .select("id, user_id, recipient_id, read_at");
+
+if (error) {
+  console.error("ERROR MARKING MESSAGES READ:", error);
+  return;
+}
+
+console.log("MESSAGES MARKED AS READ:", updatedMessages);
 
   setMessage("");
 }
@@ -1148,6 +1151,7 @@ setMemberError("");
   setSelectedContact(contact.profiles);
   setSelectedGroup(null);
 
+  // Mark all messages from this contact as read.
   const { error } = await supabase
     .from("messages")
     .update({ read_at: new Date().toISOString() })
@@ -1160,6 +1164,7 @@ setMemberError("");
     return;
   }
 
+  // Remove their unread badge immediately.
   setUnreadCounts((current) => ({
     ...current,
     [contact.profiles.id]: 0,

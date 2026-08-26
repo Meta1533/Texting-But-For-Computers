@@ -122,6 +122,7 @@ function Chat({ user }) {
   const [unreadCounts, setUnreadCounts] = useState({});
   const messagesEndRef = useRef(null);
   const presenceChannelRef = useRef(null);
+  const presenceReadyRef = useRef(false);
   const [userStatus, setUserStatus] = useState("online");
   const [presenceUsers, setPresenceUsers] = useState({});
   const [showStatusPicker, setShowStatusPicker] = useState(false);
@@ -151,26 +152,11 @@ function Chat({ user }) {
   loadProfile();
 }, [user.id]);
 
-async function changeStatus(newStatus) {
+function changeStatus(newStatus) {
   if (!USER_STATUSES[newStatus]) return;
 
   setUserStatus(newStatus);
   setShowStatusPicker(false);
-
-  const channel = presenceChannelRef.current;
-
-  if (!channel) return;
-
-  const { error } = await channel.track({
-    userId: user.id,
-    username: username || "Unknown user",
-    status: newStatus,
-    onlineAt: new Date().toISOString(),
-  });
-
-  if (error) {
-    console.error("Could not update status:", error);
-  }
 }
 
 useEffect(() => {
@@ -188,6 +174,9 @@ useEffect(() => {
 
   function updatePresenceState() {
     const state = channel.presenceState();
+
+    console.log("RAW PRESENCE STATE:", state);
+
     const users = {};
 
     Object.values(state).forEach((presences) => {
@@ -203,6 +192,8 @@ useEffect(() => {
       };
     });
 
+    console.log("PARSED PRESENCE USERS:", users);
+
     setPresenceUsers(users);
   }
 
@@ -211,22 +202,30 @@ useEffect(() => {
     .on("presence", { event: "join" }, updatePresenceState)
     .on("presence", { event: "leave" }, updatePresenceState)
     .subscribe(async (status) => {
+      console.log("Presence channel status:", status);
+
       if (status !== "SUBSCRIBED") {
-        console.log("Presence status:", status);
         return;
       }
 
-      await channel.track({
+      presenceReadyRef.current = true;
+
+      const { error } = await channel.track({
         userId: user.id,
         username: username || "Unknown user",
         status: userStatus,
         onlineAt: new Date().toISOString(),
       });
 
+      if (error) {
+        console.error("Initial presence track error:", error);
+      }
+
       updatePresenceState();
     });
 
   return () => {
+    presenceReadyRef.current = false;
     presenceChannelRef.current = null;
     supabase.removeChannel(channel);
   };
@@ -235,7 +234,9 @@ useEffect(() => {
 useEffect(() => {
   const channel = presenceChannelRef.current;
 
-  if (!channel) return;
+  if (!channel || !presenceReadyRef.current) {
+    return;
+  }
 
   channel
     .track({
@@ -244,8 +245,10 @@ useEffect(() => {
       status: userStatus,
       onlineAt: new Date().toISOString(),
     })
-    .catch((error) => {
-      console.error("Presence status update error:", error);
+    .then(({ error }) => {
+      if (error) {
+        console.error("Presence status update error:", error);
+      }
     });
 }, [userStatus, username, user.id]);
 

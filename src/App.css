@@ -1068,7 +1068,7 @@ button {
 .status-menu {
   margin: 8px 12px 14px;
   padding: 10px;
-  background: #f8f8fb;
+  background: #000000;
   border: 1px solid #ddd;
   border-radius: 14px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);

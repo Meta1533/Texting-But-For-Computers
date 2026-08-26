@@ -876,3 +876,285 @@ button {
 .app[data-theme="dark"] .status-picker button.selected-status {
   background: #272d3b;
 }
+.contact-status {
+  margin: 2px 0 0;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.contact-status.offline {
+  color: #6b7280;
+}
+
+.status-button {
+  display: block;
+  width: fit-content;
+  margin-top: 3px;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 12px;
+  text-align: left;
+}
+
+.status-button:hover {
+  background: #374151;
+  color: #f9fafb;
+}
+
+.status-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.status-picker h3 {
+  margin: 0 4px 6px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.status-picker button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #f9fafb;
+  text-align: left;
+}
+
+.status-picker button:hover {
+  background: #374151;
+}
+
+.status-picker button.selected-status {
+  background: var(--primary);
+  color: white;
+}
+.status-menu {
+  margin: 8px 12px 14px;
+  padding: 10px;
+
+  background: var(--background-secondary, #f8f8fb);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 14px;
+
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.status-menu-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  padding: 8px 10px 10px;
+}
+
+.status-menu-header strong {
+  font-size: 14px;
+}
+
+.status-menu-header span {
+  font-size: 12px;
+  color: #888;
+}
+
+.status-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.status-option {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 9px 10px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.status-option:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.status-option:active {
+  transform: scale(0.98);
+}
+
+.status-option.selected {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.status-option-icon {
+  width: 26px;
+
+  display: flex;
+  justify-content: center;
+
+  font-size: 18px;
+}
+
+.status-option-text {
+  flex: 1;
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-check {
+  color: var(--primary);
+  font-weight: bold;
+  font-size: 16px;
+}
+.status-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+
+  padding: 6px 9px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: inherit;
+
+  cursor: pointer;
+
+  font-size: 13px;
+
+  text-align: left;
+}
+
+.status-button:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.status-arrow {
+  font-size: 9px;
+  opacity: 0.6;
+}
+.status-menu {
+  margin: 8px 12px 14px;
+  padding: 10px;
+  background: #f8f8fb;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.status-menu-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px 10px;
+}
+
+.status-menu-header strong {
+  font-size: 14px;
+}
+
+.status-menu-header span {
+  font-size: 12px;
+  color: #888;
+}
+
+.status-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.status-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.status-option:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.status-option.selected {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.status-option-icon {
+  width: 26px;
+  display: flex;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.status-option-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-check {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.status-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 9px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+}
+
+.status-button:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.status-arrow {
+  font-size: 9px;
+  opacity: 0.6;
+}

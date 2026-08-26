@@ -216,16 +216,14 @@ useEffect(() => {
         return;
       }
 
-      const { error } = await channel.track({
+      await channel.track({
         userId: user.id,
         username: username || "Unknown user",
         status: userStatus,
         onlineAt: new Date().toISOString(),
       });
 
-      if (error) {
-        console.error("Presence track error:", error);
-      }
+      updatePresenceState();
     });
 
   return () => {
@@ -270,6 +268,12 @@ useEffect(() => {
 
   loadContacts();
 }, [user.id]);
+
+useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({
+    behavior: "smooth",
+  });
+}, [messages]);
 
 useEffect(() => {
   async function loadUnread() {
@@ -488,13 +492,21 @@ useEffect(() => {
 
         if (!belongsToConversation) return;
 
-        setMessages((currentMessages) => [
-          ...currentMessages,
-          {
-            text: msg.content,
-            sent: msg.user_id === user.id,
-          },
-        ]);
+        setMessages((currentMessages) => {
+  if (currentMessages.some((existing) => existing.id === msg.id)) {
+    return currentMessages;
+  }
+
+  return [
+    ...currentMessages,
+    {
+      id: msg.id,
+      text: msg.content,
+      sent: msg.user_id === user.id,
+      createdAt: msg.created_at,
+    },
+  ];
+});
       }
     )
     .subscribe((status) => {
@@ -615,61 +627,85 @@ useEffect(() => {
 }, [user.id, selectedContact, selectedGroup]);
   
   async function sendMessage() {
-    if (selectedGroup) {
   if (message.trim() === "") return;
 
-  const { data, error } = await supabase
-    .from("group_messages")
-    .insert({
-      group_id: selectedGroup.id,
-      user_id: user.id,
-      content: message,
-    })
-    .select()
-    .single();
+  // =========================
+  // GROUP MESSAGE
+  // =========================
+  if (selectedGroup) {
+    const { data, error } = await supabase
+      .from("group_messages")
+      .insert({
+        group_id: selectedGroup.id,
+        user_id: user.id,
+        content: message.trim(),
+      })
+      .select()
+      .single();
 
-  if (error) {
-    console.error("Error sending group message:", error);
+    if (error) {
+      console.error("Error sending group message:", error);
+      return;
+    }
+
+    setMessage("");
     return;
   }
 
-  setMessage("");
-  return;
-}
-  if (!selectedContact) return;
-  if (message.trim() === "") return;
-
-  const containsBannedWord = BANNED_WORDS.some((word) =>
-    message.toLowerCase().includes(word.toLowerCase())
-  );
-
-  const messageToSend = containsBannedWord
-    ? "#".repeat(message.length)
-    : message;
-
+  // =========================
+  // PRIVATE MESSAGE
+  // =========================
   if (!selectedContact) {
     alert("Select a contact before sending a message.");
     return;
   }
 
-  console.log("Logged in user:", user.id);
+  const trimmedMessage = message.trim();
 
-  const { data: updatedMessages, error } = await supabase
-  .from("messages")
-  .update({ read_at: new Date().toISOString() })
-  .eq("user_id", selectedContact.id)
-  .eq("recipient_id", user.id)
-  .is("read_at", null)
-  .select("id, user_id, recipient_id, read_at");
+  // Check for banned words
+  const containsBannedWord = BANNED_WORDS.some((word) =>
+    trimmedMessage.toLowerCase().includes(word.toLowerCase())
+  );
 
-if (error) {
-  console.error("ERROR MARKING MESSAGES READ:", error);
-  return;
-}
+  const messageToSend = containsBannedWord
+    ? "#".repeat(trimmedMessage.length)
+    : trimmedMessage;
 
-console.log("MESSAGES MARKED AS READ:", updatedMessages);
+  // Actually INSERT the private message
+  const { data, error } = await supabase
+    .from("messages")
+    .insert({
+      user_id: user.id,
+      recipient_id: selectedContact.id,
+      content: messageToSend,
+    })
+    .select()
+    .single();
 
+  if (error) {
+    console.error("Error sending private message:", error);
+    alert("Could not send message: " + error.message);
+    return;
+  }
+
+  console.log("Private message sent:", data);
+
+  // Clear input
   setMessage("");
+
+  // Mark any messages from the other person as read
+  const { error: readError } = await supabase
+    .from("messages")
+    .update({
+      read_at: new Date().toISOString(),
+    })
+    .eq("user_id", selectedContact.id)
+    .eq("recipient_id", user.id)
+    .is("read_at", null);
+
+  if (readError) {
+    console.error("Error marking messages as read:", readError);
+  }
 }
 async function searchForContact() {
   const search = contactSearch.trim();
@@ -936,34 +972,53 @@ async function logOut() {
     <strong>{username || "Loading..."}</strong>
 
     <button
-      className="status-button"
-      onClick={() => setShowStatusPicker((current) => !current)}
-    >
-      {USER_STATUSES[userStatus].emoji}{" "}
-      {USER_STATUSES[userStatus].label}
-    </button>
+  className="status-button"
+  onClick={() => {
+    setShowStatusPicker((current) => !current);
+  }}
+>
+  <span>
+    {USER_STATUSES[userStatus].emoji}{" "}
+    {USER_STATUSES[userStatus].label}
+  </span>
+
+  <span className="status-arrow">
+    {showStatusPicker ? "▲" : "▼"}
+  </span>
+</button>
   </div>
 </div>
 
 {showStatusPicker && (
-  <div className="status-picker">
-    <h3>Your status</h3>
+  <div className="status-menu">
+    <div className="status-menu-header">
+      <strong>Set your status</strong>
+      <span>How are you doing?</span>
+    </div>
 
-    {Object.entries(USER_STATUSES).map(([statusId, status]) => (
-      <button
-        key={statusId}
-        className={
-          userStatus === statusId ? "selected-status" : ""
-        }
-        onClick={() => changeStatus(statusId)}
-      >
-        <span>
-          {status.emoji} {status.label}
-        </span>
+    <div className="status-options">
+      {Object.entries(USER_STATUSES).map(([statusId, status]) => (
+        <button
+          key={statusId}
+          className={`status-option ${
+            userStatus === statusId ? "selected" : ""
+          }`}
+          onClick={() => changeStatus(statusId)}
+        >
+          <span className="status-option-icon">
+            {status.emoji}
+          </span>
 
-        {userStatus === statusId && <span>✓</span>}
-      </button>
-    ))}
+          <span className="status-option-text">
+            {status.label}
+          </span>
+
+          {userStatus === statusId && (
+            <span className="status-check">✓</span>
+          )}
+        </button>
+      ))}
+    </div>
   </div>
 )}
 

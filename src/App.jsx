@@ -44,6 +44,33 @@ const BANNED_WORDS = [
 
 ];
 
+const USER_STATUSES = {
+  online: {
+    label: "Online",
+    emoji: "🟢",
+  },
+  touching_grass: {
+    label: "Touching grass",
+    emoji: "🌱",
+  },
+  sleeping: {
+    label: "Sleeping",
+    emoji: "😴",
+  },
+  dnd: {
+    label: "Do Not Disturb",
+    emoji: "🔕",
+  },
+  gaming: {
+    label: "Gaming",
+    emoji: "🎮",
+  },
+  studying: {
+    label: "Studying",
+    emoji: "📚",
+  },
+};
+
 function App() {
   const [session, setSession] = useState(null);
 
@@ -94,6 +121,10 @@ function Chat({ user }) {
   const [memberError, setMemberError] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
   const messagesEndRef = useRef(null);
+  const presenceChannelRef = useRef(null);
+  const [userStatus, setUserStatus] = useState("online");
+  const [presenceUsers, setPresenceUsers] = useState({});
+  const [showStatusPicker, setShowStatusPicker] = useState(false);
  
   console.log("CURRENT USER ID:", user.id);
 
@@ -119,6 +150,106 @@ function Chat({ user }) {
 
   loadProfile();
 }, [user.id]);
+
+async function changeStatus(newStatus) {
+  if (!USER_STATUSES[newStatus]) return;
+
+  setUserStatus(newStatus);
+  setShowStatusPicker(false);
+
+  const channel = presenceChannelRef.current;
+
+  if (!channel) return;
+
+  const { error } = await channel.track({
+    userId: user.id,
+    username: username || "Unknown user",
+    status: newStatus,
+    onlineAt: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("Could not update status:", error);
+  }
+}
+
+useEffect(() => {
+  if (!user?.id) return;
+
+  const channel = supabase.channel("friend-chat-presence", {
+    config: {
+      presence: {
+        key: user.id,
+      },
+    },
+  });
+
+  presenceChannelRef.current = channel;
+
+  function updatePresenceState() {
+    const state = channel.presenceState();
+    const users = {};
+
+    Object.values(state).forEach((presences) => {
+      const presence = presences?.[0];
+
+      if (!presence?.userId) return;
+
+      users[presence.userId] = {
+        userId: presence.userId,
+        username: presence.username || "Unknown user",
+        status: presence.status || "online",
+        onlineAt: presence.onlineAt,
+      };
+    });
+
+    setPresenceUsers(users);
+  }
+
+  channel
+    .on("presence", { event: "sync" }, updatePresenceState)
+    .on("presence", { event: "join" }, updatePresenceState)
+    .on("presence", { event: "leave" }, updatePresenceState)
+    .subscribe(async (status) => {
+      if (status !== "SUBSCRIBED") {
+        console.log("Presence status:", status);
+        return;
+      }
+
+      const { error } = await channel.track({
+        userId: user.id,
+        username: username || "Unknown user",
+        status: userStatus,
+        onlineAt: new Date().toISOString(),
+      });
+
+      if (error) {
+        console.error("Presence track error:", error);
+      }
+    });
+
+  return () => {
+    presenceChannelRef.current = null;
+    supabase.removeChannel(channel);
+  };
+}, [user.id]);
+
+useEffect(() => {
+  const channel = presenceChannelRef.current;
+
+  if (!channel) return;
+
+  channel
+    .track({
+      userId: user.id,
+      username: username || "Unknown user",
+      status: userStatus,
+      onlineAt: new Date().toISOString(),
+    })
+    .catch((error) => {
+      console.error("Presence status update error:", error);
+    });
+}, [userStatus, username, user.id]);
 
 // Load contacts
 useEffect(() => {
@@ -526,7 +657,7 @@ useEffect(() => {
   const { data: updatedMessages, error } = await supabase
   .from("messages")
   .update({ read_at: new Date().toISOString() })
-  .eq("user_id", contact.profiles.id)
+  .eq("user_id", selectedContact.id)
   .eq("recipient_id", user.id)
   .is("read_at", null)
   .select("id, user_id, recipient_id, read_at");
@@ -797,12 +928,44 @@ async function logOut() {
         <h2>Friend Chat</h2>
 
         <div className="friend active">
-          <div className="avatar">A</div>
-          <div>
-            <strong>{username}</strong>
-            <p>Online</p>
-          </div>
-        </div>
+  <div className="avatar">
+    {username?.charAt(0).toUpperCase() || "?"}
+  </div>
+
+  <div className="friend-info">
+    <strong>{username || "Loading..."}</strong>
+
+    <button
+      className="status-button"
+      onClick={() => setShowStatusPicker((current) => !current)}
+    >
+      {USER_STATUSES[userStatus].emoji}{" "}
+      {USER_STATUSES[userStatus].label}
+    </button>
+  </div>
+</div>
+
+{showStatusPicker && (
+  <div className="status-picker">
+    <h3>Your status</h3>
+
+    {Object.entries(USER_STATUSES).map(([statusId, status]) => (
+      <button
+        key={statusId}
+        className={
+          userStatus === statusId ? "selected-status" : ""
+        }
+        onClick={() => changeStatus(statusId)}
+      >
+        <span>
+          {status.emoji} {status.label}
+        </span>
+
+        {userStatus === statusId && <span>✓</span>}
+      </button>
+    ))}
+  </div>
+)}
 
         <button
   onClick={() => {
@@ -1185,6 +1348,27 @@ setMemberError("");
   )}
 </div>
 
+{(() => {
+  const presence = presenceUsers[contact.profiles.id];
+
+  if (!presence) {
+    return (
+      <p className="contact-status offline">
+        ⚪ Offline
+      </p>
+    );
+  }
+
+  const status =
+    USER_STATUSES[presence.status] || USER_STATUSES.online;
+
+  return (
+    <p className="contact-status">
+      {status.emoji} {status.label}
+    </p>
+  );
+})()}
+
 <button
   onClick={(event) => {
     event.stopPropagation();
@@ -1225,7 +1409,20 @@ setMemberError("");
   {selectedGroup
     ? "Group chat"
     : selectedContact
-      ? "Online"
+      ? (() => {
+          const presence =
+            presenceUsers[selectedContact.id];
+
+          if (!presence) {
+            return "⚪ Offline";
+          }
+
+          const status =
+            USER_STATUSES[presence.status] ||
+            USER_STATUSES.online;
+
+          return `${status.emoji} ${status.label}`;
+        })()
       : "Choose someone from your contacts"}
 </p>
           </div>

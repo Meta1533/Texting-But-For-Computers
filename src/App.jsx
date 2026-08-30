@@ -1435,7 +1435,9 @@ console.log("TEST ERROR:", testError);
   })
   .eq("user_id", contactId)
   .eq("recipient_id", user.id)
+  .is("read_at", null)
   .select();
+
 
 
   console.log("Messages marked as read:", data);console.log("Messages marked as read:", data);

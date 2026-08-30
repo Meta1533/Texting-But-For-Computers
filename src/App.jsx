@@ -101,10 +101,8 @@ function Chat({ user }) {
   const [username, setUsername] = useState("");
   const [theme, setTheme] = useState("purple");
   const [darkMode, setDarkMode] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [themeError, setThemeError] = useState("");
   const [newUsername, setNewUsername] = useState("");
-  const [showUsernameEditor, setShowUsernameEditor] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [contactSearch, setContactSearch] = useState("");
   const [contacts, setContacts] = useState([]);
@@ -113,7 +111,6 @@ function Chat({ user }) {
   const [selectedContact, setSelectedContact] = useState(null);
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [showGroupCreator, setShowGroupCreator] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupError, setGroupError] = useState("");
   const [groupMembers, setGroupMembers] = useState([]);
@@ -126,11 +123,48 @@ function Chat({ user }) {
   const selectedContactRef = useRef(null);
   const selectedGroupRef = useRef(null);
   const [userStatus, setUserStatus] = useState("online");
+  function SidebarSection({ icon, title, open, onToggle, children }) {
+  return (
+    <section className={`sidebar-section ${open ? "open" : "collapsed"}`}>
+      <button
+        type="button"
+        className="sidebar-section-header"
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <span className="sidebar-section-title">
+          <span className="sidebar-section-icon">{icon}</span>
+          <span>{title}</span>
+        </span>
+
+        <span className="sidebar-section-arrow">
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
+
+      {open && (
+        <div className="sidebar-section-content">
+          {children}
+        </div>
+      )}
+    </section>
+  );
+}
+
   const [presenceUsers, setPresenceUsers] = useState({});
   const [showStatusPicker, setShowStatusPicker] = useState(false);
   const [userTag, setUserTag] = useState("just_chatting");
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [profileTags, setProfileTags] = useState({});
+// Sidebar collapsible sections
+const [profileOpen, setProfileOpen] = useState(true);
+const [usernameEditorOpen, setUsernameEditorOpen] = useState(false);
+const [settingsOpen, setSettingsOpen] = useState(false);
+const [addContactOpen, setAddContactOpen] = useState(false);
+const [contactsOpen, setContactsOpen] = useState(true);
+const [groupsOpen, setGroupsOpen] = useState(true);
+const [groupMembersOpen, setGroupMembersOpen] = useState(true);
+const [createGroupOpen, setCreateGroupOpen] = useState(false);
 
   console.log("CURRENT USER ID:", user.id);
 
@@ -1098,7 +1132,7 @@ async function createGroup() {
   setGroups((currentGroups) => [...currentGroups, group]);
   setSelectedGroup(group);
   setGroupName("");
-  setShowGroupCreator(false);
+  setCreateGroupOpen(false);
 
   console.log("Group created:", group);
 }
@@ -1116,592 +1150,806 @@ async function logOut() {
   }}
 >
       <aside className="sidebar">
-        <h2>Friend Chat</h2>
+  <h2>Friend Chat</h2>
 
-        <div className="friend active">
-  <div className="avatar">
-    {username?.charAt(0).toUpperCase() || "?"}
-  </div>
+  {/* =====================================================
+      PROFILE
+      ===================================================== */}
 
-  <div className="friend-info">
-    <strong>{username || "Loading..."}</strong>
+  <SidebarSection
+    icon="👤"
+    title="My profile"
+    open={profileOpen}
+    onToggle={() => setProfileOpen((current) => !current)}
+  >
+    <div className="friend">
+      <div className="avatar">
+        {username?.charAt(0).toUpperCase() || "?"}
+      </div>
 
-    <button
-  className="status-button"
-  onClick={() => {
-    setShowStatusPicker((current) => !current);
-  }}
->
+      <div className="friend-info">
+        <strong>{username || "Loading..."}</strong>
 
+        {/* STATUS */}
+        <button
+          type="button"
+          className="status-button"
+          onClick={() =>
+            setShowStatusPicker((current) => !current)
+          }
+        >
+          <span>
+            {USER_STATUSES[userStatus].emoji}{" "}
+            {USER_STATUSES[userStatus].label}
+          </span>
 
-  <div className="tag-section">
-  <button
-    className="tag-button"
-    onClick={() => {
-      setShowTagPicker((current) => !current);
+          <span className="status-arrow">
+            {showStatusPicker ? "▲" : "▼"}
+          </span>
+        </button>
+
+        {/* TAG */}
+        <button
+          type="button"
+          className="tag-button"
+          onClick={() =>
+            setShowTagPicker((current) => !current)
+          }
+        >
+          <span className="profile-tag-pill">
+            <span className="profile-tag-emoji">
+              {USER_TAGS[userTag]?.emoji}
+            </span>
+
+            <span>
+              {USER_TAGS[userTag]?.label || "Choose a tag"}
+            </span>
+          </span>
+
+          <span className="status-arrow">
+            {showTagPicker ? "▲" : "▼"}
+          </span>
+        </button>
+      </div>
+    </div>
+
+    {/* STATUS MENU */}
+    {showStatusPicker && (
+      <div className="status-menu">
+        <div className="status-menu-header">
+          <strong>Set your status</strong>
+          <span>How are you doing?</span>
+        </div>
+
+        <div className="status-options">
+          {Object.entries(USER_STATUSES).map(
+            ([statusId, status]) => (
+              <button
+                type="button"
+                key={statusId}
+                className={`status-option ${
+                  userStatus === statusId ? "selected" : ""
+                }`}
+                onClick={() => changeStatus(statusId)}
+              >
+                <span className="status-option-icon">
+                  {status.emoji}
+                </span>
+
+                <span className="status-option-text">
+                  {status.label}
+                </span>
+
+                {userStatus === statusId && (
+                  <span className="status-check">✓</span>
+                )}
+              </button>
+            )
+          )}
+        </div>
+      </div>
+    )}
+
+    {/* TAG MENU */}
+    {showTagPicker && (
+      <div className="tag-menu">
+        <div className="tag-menu-header">
+          <strong>Choose your tag</strong>
+          <span>Show people your vibe</span>
+        </div>
+
+        <div className="tag-options">
+          {Object.entries(USER_TAGS).map(
+            ([tagId, tag]) => (
+              <button
+                type="button"
+                key={tagId}
+                className={`tag-option ${
+                  userTag === tagId ? "selected" : ""
+                }`}
+                onClick={() => changeTag(tagId)}
+              >
+                <span className="tag-option-icon">
+                  {tag.emoji}
+                </span>
+
+                <span className="tag-option-text">
+                  {tag.label}
+                </span>
+
+                {userTag === tagId && (
+                  <span className="tag-check">✓</span>
+                )}
+              </button>
+            )
+          )}
+        </div>
+      </div>
+    )}
+  </SidebarSection>
+
+  {/* =====================================================
+      USERNAME
+      ===================================================== */}
+
+  <SidebarSection
+    icon="✏️"
+    title="Username"
+    open={usernameEditorOpen}
+    onToggle={() => {
+      setUsernameEditorOpen((current) => !current);
+      setUsernameError("");
+      setNewUsername(username);
     }}
   >
-    <span>
-      {USER_TAGS[userTag]?.emoji}{" "}
-      {USER_TAGS[userTag]?.label || "Choose a tag"}
-    </span>
-
-    <span className="status-arrow">
-      {showTagPicker ? "▲" : "▼"}
-    </span>
-  </button>
-</div>
-
-{showTagPicker && (
-  <div className="tag-menu">
-    <div className="tag-menu-header">
-      <strong>Choose your tag</strong>
-      <span>Show people your vibe</span>
-    </div>
-
-    <div className="tag-options">
-      {Object.entries(USER_TAGS).map(([tagId, tag]) => (
-        <button
-          key={tagId}
-          className={`tag-option ${
-            userTag === tagId ? "selected" : ""
-          }`}
-          onClick={() => changeTag(tagId)}
-        >
-          <span className="tag-option-icon">
-            {tag.emoji}
-          </span>
-
-          <span className="tag-option-text">
-            {tag.label}
-          </span>
-
-          {userTag === tagId && (
-            <span className="tag-check">✓</span>
-          )}
-        </button>
-      ))}
-    </div>
-  </div>
-)}
-
-
-  <span>
-    {USER_STATUSES[userStatus].emoji}{" "}
-    {USER_STATUSES[userStatus].label}
-  </span>
-
-  <span className="status-arrow">
-    {showStatusPicker ? "▲" : "▼"}
-  </span>
-</button>
-  </div>
-</div>
-
-{showStatusPicker && (
-  <div className="status-menu">
-    <div className="status-menu-header">
-      <strong>Set your status</strong>
-      <span>How are you doing?</span>
-    </div>
-
-    <div className="status-options">
-      {Object.entries(USER_STATUSES).map(([statusId, status]) => (
-        <button
-          key={statusId}
-          className={`status-option ${
-            userStatus === statusId ? "selected" : ""
-          }`}
-          onClick={() => changeStatus(statusId)}
-        >
-          <span className="status-option-icon">
-            {status.emoji}
-          </span>
-
-          <span className="status-option-text">
-            {status.label}
-          </span>
-
-          {userStatus === statusId && (
-            <span className="status-check">✓</span>
-          )}
-        </button>
-      ))}
-    </div>
-  </div>
-)}
-
-        <button
-  onClick={() => {
-    setShowUsernameEditor(!showUsernameEditor);
-    setUsernameError("");
-    setNewUsername(username);
-  }}
->
-  Change username
-</button>
-
-<button onClick={() => setShowSettings(!showSettings)}>
-  Settings
-</button>
-
-{showSettings && (
-  <div className="settings">
-    <h3>Settings</h3>
-
-    <p>Choose your color:</p>
-
-    <button onClick={() => changeTheme("purple")}>
-      🟣 Purple
-    </button>
-
-    <button onClick={() => changeTheme("red")}>
-      🔴 Red
-    </button>
-
-    <button onClick={() => changeTheme("yellow")}>
-      🟡 Yellow
-    </button>
-
-    <button onClick={() => changeTheme("orange")}>
-      🟠 Orange
-    </button>
-
-    <button onClick={() => changeTheme("green")}>
-      🟢 Green
-    </button>
-
-    <button onClick={() => changeTheme("blue")}>
-      🔵 Blue
-    </button>
-
-    <p>Appearance:</p>
-
-    <button
-  onClick={() => {
-    console.log("LIGHT MODE BUTTON CLICKED");
-    changeDarkMode(false);
-  }}
->
-  ☀️ Light Mode
-</button>
-
-<button
-  onClick={() => {
-    console.log("DARK MODE BUTTON CLICKED");
-    changeDarkMode(true);
-  }}
->
-  🌙 Dark Mode
-</button>
-  </div>
-)}
-
-{showUsernameEditor && (
-  <div>
     <input
       type="text"
       placeholder="New username"
       value={newUsername}
-      onChange={(event) => setNewUsername(event.target.value)}
+      onChange={(event) => {
+        setNewUsername(event.target.value);
+        setUsernameError("");
+      }}
       minLength={3}
       maxLength={20}
     />
 
-    <button onClick={changeUsername}>
-      Save
+    <button
+      type="button"
+      className="sidebar-primary-button"
+      onClick={changeUsername}
+    >
+      Save username
     </button>
 
-    {usernameError && <p>{usernameError}</p>}
-  </div>
-)}
-<div className="contacts">
-  <h3>Add a contact</h3>
+    {usernameError && (
+      <p className="sidebar-error">{usernameError}</p>
+    )}
+  </SidebarSection>
 
-  <input
-    type="text"
-    placeholder="Search username..."
-    value={contactSearch}
-    onChange={(event) => {
-      setContactSearch(event.target.value);
-      setContactError("");
-      setSearchResult(null);
-    }}
-  />
+  {/* =====================================================
+      SETTINGS
+      ===================================================== */}
 
-  <button onClick={searchForContact}>
-    Search
-  </button>
+  <SidebarSection
+    icon="⚙️"
+    title="Settings"
+    open={settingsOpen}
+    onToggle={() => setSettingsOpen((current) => !current)}
+  >
+    <div className="settings">
+      <div className="settings-block">
+        <p>Accent color</p>
 
-  {contactError && <p>{contactError}</p>}
+        <div className="theme-grid">
+          <button
+            type="button"
+            className={theme === "purple" ? "theme-selected" : ""}
+            onClick={() => changeTheme("purple")}
+          >
+            🟣 Purple
+          </button>
 
-  {searchResult && (
-    <div>
-      <strong>{searchResult.username}</strong>
-      <button onClick={addContact}>Add contact</button>
-    </div>
-  )}
+          <button
+            type="button"
+            className={theme === "red" ? "theme-selected" : ""}
+            onClick={() => changeTheme("red")}
+          >
+            🔴 Red
+          </button>
 
-<div className="groups">
-  <h3>Group chats</h3>
+          <button
+            type="button"
+            className={theme === "yellow" ? "theme-selected" : ""}
+            onClick={() => changeTheme("yellow")}
+          >
+            🟡 Yellow
+          </button>
 
-  <button onClick={() => {
-    setShowGroupCreator(!showGroupCreator);
-    setGroupError("");
-  }}>
-    + Create group
-  </button>
+          <button
+            type="button"
+            className={theme === "orange" ? "theme-selected" : ""}
+            onClick={() => changeTheme("orange")}
+          >
+            🟠 Orange
+          </button>
 
-  {showGroupCreator && (
-    <div>
-      <input
-        type="text"
-        placeholder="Group name..."
-        value={groupName}
-        onChange={(event) => {
-          setGroupName(event.target.value);
-          setGroupError("");
-        }}
-        maxLength={30}
-      />
+          <button
+            type="button"
+            className={theme === "green" ? "theme-selected" : ""}
+            onClick={() => changeTheme("green")}
+          >
+            🟢 Green
+          </button>
 
-      <button onClick={createGroup}>
-        Create
-      </button>
-
-      {groupError && <p>{groupError}</p>}
-    </div>
-  )}
-
-  <h3>Your groups</h3>
-
-  {groups.length === 0 ? (
-    <p>No groups yet.</p>
-  ) : (
-    groups.map((group) => (
-      <div
-        className="contact-item"
-        key={group.id}
-        onClick={() => {
-          setSelectedGroup(group);
-          setSelectedContact(null);
-        }}
-      >
-        <div className="avatar">
-          {group.name.charAt(0).toUpperCase()}
+          <button
+            type="button"
+            className={theme === "blue" ? "theme-selected" : ""}
+            onClick={() => changeTheme("blue")}
+          >
+            🔵 Blue
+          </button>
         </div>
 
-        <strong>{group.name}</strong>
+        {themeError && (
+          <p className="sidebar-error">{themeError}</p>
+        )}
       </div>
-    ))
-  )}
-  {selectedGroup && (
-  <div className="group-members">
-    <h3>{selectedGroup.name} members</h3>
 
-    {selectedGroup.created_by === user.id && (
-  <div className="group-management">
+      <div className="settings-block">
+        <p>Appearance</p>
+
+        <div className="appearance-buttons">
+          <button
+            type="button"
+            className={!darkMode ? "theme-selected" : ""}
+            onClick={() => changeDarkMode(false)}
+          >
+            ☀️ Light
+          </button>
+
+          <button
+            type="button"
+            className={darkMode ? "theme-selected" : ""}
+            onClick={() => changeDarkMode(true)}
+          >
+            🌙 Dark
+          </button>
+        </div>
+      </div>
+    </div>
+  </SidebarSection>
+
+  {/* =====================================================
+      ADD CONTACT
+      ===================================================== */}
+
+  <SidebarSection
+    icon="➕"
+    title="Add a contact"
+    open={addContactOpen}
+    onToggle={() => setAddContactOpen((current) => !current)}
+  >
+    <input
+      type="text"
+      placeholder="Search username..."
+      value={contactSearch}
+      onChange={(event) => {
+        setContactSearch(event.target.value);
+        setContactError("");
+        setSearchResult(null);
+      }}
+    />
+
     <button
-  onClick={() => {
-    setShowAddMembers(!showAddMembers);
-    setMemberError("");
-  }}
->{showAddMembers && (
-  <div className="add-members">
-    <h4>Add people to {selectedGroup.name}</h4>
+      type="button"
+      className="sidebar-primary-button"
+      onClick={searchForContact}
+    >
+      Search
+    </button>
 
+    {contactError && (
+      <p className="sidebar-error">{contactError}</p>
+    )}
+
+    {searchResult && (
+      <div className="search-result">
+        <div className="search-result-user">
+          <div className="avatar small">
+            {searchResult.username
+              .charAt(0)
+              .toUpperCase()}
+          </div>
+
+          <strong>{searchResult.username}</strong>
+        </div>
+
+        <button
+          type="button"
+          onClick={addContact}
+        >
+          Add
+        </button>
+      </div>
+    )}
+  </SidebarSection>
+
+  {/* =====================================================
+      CONTACTS
+      ===================================================== */}
+
+  <SidebarSection
+    icon="👥"
+    title={`Your contacts${
+      contacts.length ? ` (${contacts.length})` : ""
+    }`}
+    open={contactsOpen}
+    onToggle={() => setContactsOpen((current) => !current)}
+  >
     {contacts.length === 0 ? (
-      <p>You don't have any contacts to add.</p>
+      <p className="empty-sidebar-message">
+        No contacts yet.
+      </p>
     ) : (
       contacts.map((contact) => {
-        const alreadyMember = groupMembers.some(
-          (member) => member.user_id === contact.profiles.id
-        );
+        const contactId = contact.profiles.id;
+        const tagId = profileTags[contactId];
+        const tag = USER_TAGS[tagId];
+        const presence = presenceUsers[contactId];
 
-        if (alreadyMember) return null;
+        const status = presence
+          ? USER_STATUSES[presence.status] ||
+            USER_STATUSES.online
+          : null;
+
+        const isSelected =
+          selectedContact?.id === contactId;
 
         return (
-          <div className="add-member-row" key={contact.id}>
-            <span>{contact.profiles.username}</span>
+          <div
+            className={`contact-item ${
+              isSelected ? "selected-contact" : ""
+            }`}
+            key={contact.id}
+            onClick={async () => {
+              setSelectedContact(contact.profiles);
+              setSelectedGroup(null);
+
+              setUnreadCounts((current) => ({
+                ...current,
+                [contactId]: 0,
+              }));
+
+              const { error } = await supabase
+                .from("messages")
+                .update({
+                  read_at: new Date().toISOString(),
+                })
+                .eq("user_id", contactId)
+                .eq("recipient_id", user.id)
+                .is("read_at", null);
+
+              if (error) {
+                console.error(
+                  "Error marking messages as read:",
+                  error
+                );
+              }
+            }}
+          >
+            <div className="avatar">
+              {contact.profiles.username
+                .charAt(0)
+                .toUpperCase()}
+            </div>
+
+            <div className="contact-details">
+              <div className="contact-name-row">
+                <strong>
+                  {contact.profiles.username}
+                </strong>
+
+                {unreadCounts[contactId] > 0 && (
+                  <span className="unread-badge">
+                    {unreadCounts[contactId]}
+                  </span>
+                )}
+              </div>
+
+              {tag && (
+                <div className="contact-tag">
+                  <span>{tag.emoji}</span>
+                  <span>{tag.label}</span>
+                </div>
+              )}
+
+              {status ? (
+                <p className="contact-status">
+                  {status.emoji} {status.label}
+                </p>
+              ) : (
+                <p className="contact-status offline">
+                  ⚪ Offline
+                </p>
+              )}
+            </div>
 
             <button
-              onClick={async () => {
-                const { error } = await supabase
-                  .from("group_members")
-                  .insert({
-                    group_id: selectedGroup.id,
-                    user_id: contact.profiles.id,
-                  });
-
-                if (error) {
-                  if (error.code === "23505") {
-                    setMemberError(
-                      "That person is already in the group."
-                    );
-                  } else {
-                    console.error("Error adding member:", error);
-                    setMemberError(error.message);
-                  }
-                  return;
-                }
-
-                const { data: updatedMembers, error: membersError } = await supabase
-  .from("group_members")
-  .select("id, user_id, profiles:profiles!group_members_user_id_fkey(id, username)")
-  .eq("group_id", selectedGroup.id);
-
-if (membersError) {
-  console.error("Error refreshing group members:", membersError);
-} else {
-  setGroupMembers(updatedMembers || []);
-}
-
-setMemberError("");
+              type="button"
+              className="remove-contact-button"
+              onClick={(event) => {
+                event.stopPropagation();
+                removeContact(contact.contact_id);
               }}
             >
-              Add
+              ×
             </button>
           </div>
         );
       })
     )}
+  </SidebarSection>
 
-    {memberError && <p>{memberError}</p>}
-  </div>
-)}
-  {showAddMembers ? "Cancel" : "Add members"}
-</button>
+  {/* =====================================================
+      GROUPS
+      ===================================================== */}
+
+  <SidebarSection
+    icon="👨‍👩‍👧"
+    title={`Group chats${
+      groups.length ? ` (${groups.length})` : ""
+    }`}
+    open={groupsOpen}
+    onToggle={() => setGroupsOpen((current) => !current)}
+  >
     <button
-      onClick={async () => {
-        const confirmed = window.confirm(
-          `Are you sure you want to delete "${selectedGroup.name}"? This cannot be undone.`
-        );
-
-        if (!confirmed) return;
-
-        const { error } = await supabase
-          .from("groups")
-          .delete()
-          .eq("id", selectedGroup.id);
-
-        if (error) {
-          console.error("Error deleting group:", error);
-          setGroupError(error.message);
-          return;
-        }
-
-        setGroups((currentGroups) =>
-          currentGroups.filter((group) => group.id !== selectedGroup.id)
-        );
-
-        setSelectedGroup(null);
-        setGroupMembers([]);
-        setMessages([]);
-        setGroupError("");
-
-        alert("Group deleted.");
-      }}
+      type="button"
+      className="create-group-button"
+      onClick={() =>
+        setCreateGroupOpen((current) => !current)
+      }
     >
-      Delete group
+      {createGroupOpen
+        ? "− Cancel"
+        : "+ Create group"}
     </button>
 
-    {groupError && <p>{groupError}</p>}
-  </div>
-)}
+    {createGroupOpen && (
+      <div className="create-group-panel">
+        <input
+          type="text"
+          placeholder="Group name..."
+          value={groupName}
+          onChange={(event) => {
+            setGroupName(event.target.value);
+            setGroupError("");
+          }}
+          maxLength={30}
+        />
 
-{selectedGroup.created_by !== user.id && (
-  <div className="group-management">
-    <button
-      onClick={async () => {
-        const confirmed = window.confirm(
-          `Leave "${selectedGroup.name}"?`
-        );
+        <button
+          type="button"
+          className="sidebar-primary-button"
+          onClick={async () => {
+            await createGroup();
+            setCreateGroupOpen(false);
+          }}
+        >
+          Create group
+        </button>
 
-        if (!confirmed) return;
-
-        const { error } = await supabase
-          .from("group_members")
-          .delete()
-          .eq("group_id", selectedGroup.id)
-          .eq("user_id", user.id);
-
-        if (error) {
-          console.error("Error leaving group:", error);
-          setGroupError(error.message);
-          return;
-        }
-
-        setGroups((currentGroups) =>
-          currentGroups.filter((group) => group.id !== selectedGroup.id)
-        );
-
-        setSelectedGroup(null);
-        setGroupMembers([]);
-        setMessages([]);
-        setGroupError("");
-
-        alert("You left the group.");
-      }}
-    >
-      Leave group
-    </button>
-
-    {groupError && <p>{groupError}</p>}
-  </div>
-)}
-
-    {groupMembers.map((member) => (
-      <div key={member.id} className="contact-item">
-        <div className="avatar">
-          {member.profile?.username?.charAt(0).toUpperCase() || "?"}
-        </div>
-
-        <strong>
-          {member.profile?.username || "Unknown user"}
-        </strong>
+        {groupError && (
+          <p className="sidebar-error">
+            {groupError}
+          </p>
+        )}
       </div>
-    ))}
-  </div>
-)}
-</div>
-
-<h3>Your contacts</h3>
-
-{contacts.length === 0 ? (
-  <p>No contacts yet.</p>
-) : (
-  contacts.map((contact) => (
-  <div
-    className="contact-item"
-    key={contact.id}
-    onClick={async () => {
-  const contactId = contact.profiles.id;
-
-  setSelectedContact(contact.profiles);
-  setSelectedGroup(null);
-
-  setUnreadCounts((current) => ({
-    ...current,
-    [contactId]: 0,
-  }));
-
-  const { error } = await supabase
-    .from("messages")
-    .update({
-      read_at: new Date().toISOString(),
-    })
-    .eq("user_id", contactId)
-    .eq("recipient_id", user.id)
-    .is("read_at", null);
-
-  if (error) {
-    console.error("Error marking messages as read:", error);
-  }
-}}
-
-
->
-    <div className="avatar">
-      {contact.profiles.username.charAt(0).toUpperCase()}
-    </div>
-
-    <div className="contact-details">
-  <div className="contact-name-row">
-    <strong>{contact.profiles.username}</strong>
-
-    {unreadCounts[contact.profiles.id] > 0 && (
-      <span className="unread-badge">
-        {unreadCounts[contact.profiles.id]}
-      </span>
     )}
-  </div>
 
-  {(() => {
-    const tagId = profileTags[contact.profiles.id];
-    const tag = USER_TAGS[tagId];
-
-    if (!tag) return null;
-
-    return (
-      <div className="contact-tag">
-        {tag.emoji} {tag.label}
-      </div>
-    );
-  })()}
-
-  {(() => {
-    const presence = presenceUsers[contact.profiles.id];
-
-    if (!presence) {
-      return (
-        <p className="contact-status offline">
-          ⚪ Offline
-        </p>
-      );
-    }
-
-    const status =
-      USER_STATUSES[presence.status] || USER_STATUSES.online;
-
-    return (
-      <p className="contact-status">
-        {status.emoji} {status.label}
-      </p>
-    );
-  })()}
-</div>
-
-{(() => {
-  const tagId = profileTags[contact.profiles.id];
-  const tag = USER_TAGS[tagId];
-
-  if (!tag) return null;
-
-  return (
-    <div className="contact-tag">
-      {tag.emoji} {tag.label}
+    <div className="subsection-label">
+      Your groups
     </div>
-  );
-})()}
 
-
-{(() => {
-  const presence = presenceUsers[contact.profiles.id];
-
-  if (!presence) {
-    return (
-      <p className="contact-status offline">
-        ⚪ Offline
+    {groups.length === 0 ? (
+      <p className="empty-sidebar-message">
+        No groups yet.
       </p>
-    );
-  }
+    ) : (
+      groups.map((group) => {
+        const isSelected =
+          selectedGroup?.id === group.id;
 
-  const status =
-    USER_STATUSES[presence.status] || USER_STATUSES.online;
+        return (
+          <div
+            className={`contact-item ${
+              isSelected ? "selected-contact" : ""
+            }`}
+            key={group.id}
+            onClick={() => {
+              setSelectedGroup(group);
+              setSelectedContact(null);
+              setGroupMembersOpen(true);
+            }}
+          >
+            <div className="avatar">
+              {group.name.charAt(0).toUpperCase()}
+            </div>
 
-  return (
-    <p className="contact-status">
-      {status.emoji} {status.label}
-    </p>
-  );
-})()}
+            <div className="contact-details">
+              <strong>{group.name}</strong>
 
-<button
-  onClick={(event) => {
-    event.stopPropagation();
-    removeContact(contact.contact_id);
-  }}
->
-  Remove
-</button>
+              <p className="contact-status">
+                Group chat
+              </p>
+            </div>
+          </div>
+        );
+      })
+    )}
+  </SidebarSection>
 
-  </div>
-))
-)}
+  {/* =====================================================
+      SELECTED GROUP
+      ===================================================== */}
 
-</div>
-        <button onClick={logOut}>Log out</button>
-      </aside>
+  {selectedGroup && (
+    <SidebarSection
+      icon="🧑‍🤝‍🧑"
+      title={`${selectedGroup.name} members`}
+      open={groupMembersOpen}
+      onToggle={() =>
+        setGroupMembersOpen((current) => !current)
+      }
+    >
+      {selectedGroup.created_by === user.id && (
+        <div className="group-management">
+          <button
+            type="button"
+            onClick={() => {
+              setShowAddMembers((current) => !current);
+              setMemberError("");
+            }}
+          >
+            {showAddMembers
+              ? "− Hide add members"
+              : "+ Add members"}
+          </button>
+
+          {showAddMembers && (
+            <div className="add-members">
+              <h4>
+                Add people to {selectedGroup.name}
+              </h4>
+
+              {contacts.length === 0 ? (
+                <p>
+                  You don't have any contacts to add.
+                </p>
+              ) : (
+                contacts.map((contact) => {
+                  const alreadyMember =
+                    groupMembers.some(
+                      (member) =>
+                        member.user_id ===
+                        contact.profiles.id
+                    );
+
+                  if (alreadyMember) return null;
+
+                  return (
+                    <div
+                      className="add-member-row"
+                      key={contact.id}
+                    >
+                      <span>
+                        {contact.profiles.username}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const { error } =
+                            await supabase
+                              .from("group_members")
+                              .insert({
+                                group_id:
+                                  selectedGroup.id,
+                                user_id:
+                                  contact.profiles.id,
+                              });
+
+                          if (error) {
+                            if (
+                              error.code === "23505"
+                            ) {
+                              setMemberError(
+                                "That person is already in the group."
+                              );
+                            } else {
+                              console.error(
+                                "Error adding member:",
+                                error
+                              );
+                              setMemberError(
+                                error.message
+                              );
+                            }
+
+                            return;
+                          }
+
+                          const {
+                            data: updatedMembers,
+                            error: membersError,
+                          } = await supabase
+                            .from("group_members")
+                            .select(
+                              "id, user_id, profiles:profiles!group_members_user_id_fkey(id, username)"
+                            )
+                            .eq(
+                              "group_id",
+                              selectedGroup.id
+                            );
+
+                          if (membersError) {
+                            console.error(
+                              "Error refreshing group members:",
+                              membersError
+                            );
+                          } else {
+                            setGroupMembers(
+                              updatedMembers || []
+                            );
+                          }
+
+                          setMemberError("");
+                        }}
+                      >
+                        Add
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+
+              {memberError && (
+                <p className="sidebar-error">
+                  {memberError}
+                </p>
+              )}
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="danger-button"
+            onClick={async () => {
+              const confirmed = window.confirm(
+                `Are you sure you want to delete "${selectedGroup.name}"? This cannot be undone.`
+              );
+
+              if (!confirmed) return;
+
+              const { error } = await supabase
+                .from("groups")
+                .delete()
+                .eq("id", selectedGroup.id);
+
+              if (error) {
+                console.error(
+                  "Error deleting group:",
+                  error
+                );
+                setGroupError(error.message);
+                return;
+              }
+
+              setGroups((currentGroups) =>
+                currentGroups.filter(
+                  (group) =>
+                    group.id !== selectedGroup.id
+                )
+              );
+
+              setSelectedGroup(null);
+              setGroupMembers([]);
+              setMessages([]);
+              setGroupError("");
+
+              alert("Group deleted.");
+            }}
+          >
+            Delete group
+          </button>
+        </div>
+      )}
+
+      {selectedGroup.created_by !== user.id && (
+        <div className="group-management">
+          <button
+            type="button"
+            className="danger-button"
+            onClick={async () => {
+              const confirmed = window.confirm(
+                `Leave "${selectedGroup.name}"?`
+              );
+
+              if (!confirmed) return;
+
+              const { error } = await supabase
+                .from("group_members")
+                .delete()
+                .eq(
+                  "group_id",
+                  selectedGroup.id
+                )
+                .eq("user_id", user.id);
+
+              if (error) {
+                console.error(
+                  "Error leaving group:",
+                  error
+                );
+                setGroupError(error.message);
+                return;
+              }
+
+              setGroups((currentGroups) =>
+                currentGroups.filter(
+                  (group) =>
+                    group.id !== selectedGroup.id
+                )
+              );
+
+              setSelectedGroup(null);
+              setGroupMembers([]);
+              setMessages([]);
+              setGroupError("");
+
+              alert("You left the group.");
+            }}
+          >
+            Leave group
+          </button>
+        </div>
+      )}
+
+      {groupError && (
+        <p className="sidebar-error">{groupError}</p>
+      )}
+
+      <div className="member-list">
+        {groupMembers.map((member) => (
+          <div
+            key={member.id}
+            className="contact-item"
+          >
+            <div className="avatar">
+              {member.profile?.username
+                ?.charAt(0)
+                .toUpperCase() || "?"}
+            </div>
+
+            <strong>
+              {member.profile?.username ||
+                "Unknown user"}
+            </strong>
+          </div>
+        ))}
+      </div>
+    </SidebarSection>
+  )}
+
+  <button
+    type="button"
+    className="logout-button"
+    onClick={logOut}
+  >
+    🚪 Log out
+  </button>
+</aside>
+
 
       <main className="chat">
         <header className="chat-header">

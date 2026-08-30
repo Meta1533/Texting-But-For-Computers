@@ -2038,7 +2038,7 @@ async function logOut() {
               }
             }}
           />
-
+ 
           <button onClick={sendMessage}>Send</button>
         </div>
       </main>
@@ -2116,9 +2116,9 @@ const USER_TAGS = {
     label: "Barely Functioning",
     emoji: "🫠",
   },
-  hopeless_romantic: {
-    label: "Hopeless Romantic",
-    emoji: "❤️",
+  farmer: {
+    label: "Farmer",
+    emoji: "🐎",
   },
   vibing: {
     label: "Vibing",

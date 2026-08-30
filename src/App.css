@@ -1,3 +1,7 @@
+/* =========================================================
+   RESET
+   ========================================================= */
+
 * {
   box-sizing: border-box;
 }
@@ -27,91 +31,136 @@ button {
   cursor: pointer;
 }
 
-/* Main application */
+
+/* =========================================================
+   APP
+   ========================================================= */
 
 .app {
   --primary: #6366f1;
+  --primary-hover: #5558d9;
 
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
+
   width: 100%;
   height: 100vh;
+
   overflow: hidden;
+
   background: #ffffff;
+  color: #111827;
 }
 
-/* Sidebar */
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
 
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 14px;
+
   width: 320px;
   height: 100vh;
-  padding: 24px 18px;
+
+  padding: 22px 16px;
+
   overflow-y: auto;
 
   background: #111827;
   color: #f9fafb;
+
   border-right: 1px solid #1f2937;
 }
 
 .sidebar h2 {
-  margin: 0 4px 10px;
-  font-size: 24px;
+  margin: 0 4px 8px;
+
+  font-size: 23px;
+  font-weight: 700;
   letter-spacing: -0.5px;
 }
 
 .sidebar h3 {
-  margin: 18px 4px 8px;
+  margin: 16px 4px 7px;
+
   color: #9ca3af;
-  font-size: 12px;
+
+  font-size: 11px;
   font-weight: 700;
+
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
-/* Current user */
+
+/* =========================================================
+   CURRENT USER
+   ========================================================= */
 
 .friend {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 11px;
+
+  padding: 11px;
+
   border-radius: 12px;
+
   background: #1f2937;
+}
+
+.friend-info {
+  min-width: 0;
 }
 
 .friend strong {
   display: block;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
   font-size: 14px;
 }
 
 .friend p {
   margin: 3px 0 0;
+
   color: #9ca3af;
+
   font-size: 12px;
 }
 
-/* Avatars */
+
+/* =========================================================
+   AVATARS
+   ========================================================= */
 
 .avatar {
   display: flex;
   align-items: center;
   justify-content: center;
+
   flex: 0 0 auto;
 
   width: 42px;
   height: 42px;
+
   border-radius: 50%;
 
   background: var(--primary);
-  color: white;
+  color: #ffffff;
 
   font-weight: 700;
 }
 
-/* Sidebar buttons */
+
+/* =========================================================
+   GENERAL SIDEBAR BUTTONS
+   ========================================================= */
 
 .sidebar > button,
 .settings button,
@@ -119,6 +168,7 @@ button {
 .contacts button {
   border: 0;
   border-radius: 8px;
+
   padding: 9px 12px;
 
   background: #374151;
@@ -143,15 +193,20 @@ button {
   transform: scale(0.98);
 }
 
-/* Settings */
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
 
 .settings {
   display: flex;
   flex-direction: column;
   gap: 7px;
 
-  padding: 12px;
+  padding: 11px;
+
   border-radius: 10px;
+
   background: #1f2937;
 }
 
@@ -160,25 +215,33 @@ button {
 }
 
 .settings p {
-  margin: 0 0 4px;
+  margin: 0 0 3px;
+
   color: #9ca3af;
-  font-size: 13px;
+  font-size: 12px;
 }
 
-/* Username editor */
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
 
 .sidebar > div > input,
 .contacts input,
 .groups input {
   width: 100%;
-  padding: 10px 12px;
+
+  padding: 10px 11px;
 
   border: 1px solid #374151;
   border-radius: 8px;
+
   outline: none;
 
   background: #111827;
   color: #f9fafb;
+
+  transition: border-color 0.15s ease;
 }
 
 .sidebar input::placeholder {
@@ -189,50 +252,45 @@ button {
   border-color: var(--primary);
 }
 
-/* Contacts and groups */
+
+/* =========================================================
+   CONTACTS / GROUPS
+   ========================================================= */
 
 .contacts,
 .groups {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .contacts > h3:first-child,
 .groups > h3:first-child {
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
-/* Contact / group rows */
+
+/* =========================================================
+   CONTACT ROW
+   ========================================================= */
 
 .contact-item {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
 
-  min-height: 58px;
-  padding: 8px 10px;
+  min-height: 56px;
+
+  padding: 8px 9px;
 
   border-radius: 10px;
+
   cursor: pointer;
 
   transition:
     background 0.15s ease,
     transform 0.1s ease;
 }
-.contact-item > .contact-name-row,
-.contact-item > .contact-tag {
-  min-width: 0;
-}
-
-.contact-item > .contact-name-row {
-  flex: 1;
-}
-
-.contact-item > .contact-tag {
-  flex: 1;
-}
-
 
 .contact-item:hover {
   background: #1f2937;
@@ -242,40 +300,384 @@ button {
   transform: scale(0.99);
 }
 
-.contact-item strong {
+.contact-details {
+  min-width: 0;
+  flex: 1;
+}
+
+.contact-name-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.contact-name-row strong {
+  min-width: 0;
+
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  font-size: 13px;
 }
 
-/* Search results */
+.contact-status {
+  margin: 2px 0 0;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.contact-status.offline {
+  color: #6b7280;
+}
+
+
+/* =========================================================
+   UNREAD BADGE
+   ========================================================= */
+
+.unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  min-width: 20px;
+  height: 20px;
+
+  padding: 0 5px;
+
+  border-radius: 50%;
+
+  background: var(--primary);
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   CONTACT TAG
+   ========================================================= */
+
+.contact-tag {
+  flex: 0 0 auto;
+
+  max-width: 90px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #a5b4fc;
+
+  font-size: 10px;
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   SEARCH RESULTS
+   ========================================================= */
 
 .contacts > div:not(.groups):has(> strong) {
-  padding: 10px;
-  border-radius: 10px;
+  padding: 9px;
+
+  border-radius: 9px;
+
   background: #1f2937;
 }
 
 .contacts > div > button {
-  margin-top: 8px;
+  margin-top: 7px;
 }
 
-/* Group members */
+
+/* =========================================================
+   GROUP MEMBERS
+   ========================================================= */
 
 .group-members {
-  margin-top: 8px;
+  margin-top: 7px;
   padding-top: 8px;
+
   border-top: 1px solid #374151;
 }
 
 .group-members h3 {
-  margin-top: 8px;
+  margin-top: 7px;
 }
 
-/* Log out */
+
+/* =========================================================
+   STATUS BUTTON
+   ========================================================= */
+
+.status-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+
+  margin-top: 3px;
+  padding: 5px 7px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: transparent;
+  color: #9ca3af;
+
+  font-size: 12px;
+
+  text-align: left;
+
+  transition: background 0.15s ease;
+}
+
+.status-button:hover {
+  background: #374151;
+  color: #f9fafb;
+}
+
+.status-arrow {
+  font-size: 9px;
+  opacity: 0.6;
+}
+
+
+/* =========================================================
+   STATUS MENU
+   ========================================================= */
+
+.status-menu {
+  margin: 5px 0 8px;
+  padding: 8px;
+
+  border: 1px solid #374151;
+  border-radius: 10px;
+
+  background: #1f2937;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.status-menu-header {
+  padding: 5px 7px 8px;
+}
+
+.status-menu-header strong {
+  display: block;
+
+  color: #f9fafb;
+
+  font-size: 13px;
+}
+
+.status-menu-header span {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+}
+
+.status-options {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.status-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  width: 100%;
+
+  padding: 8px 9px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: transparent;
+  color: #f9fafb;
+
+  text-align: left;
+
+  transition: background 0.15s ease;
+}
+
+.status-option:hover {
+  background: #374151;
+}
+
+.status-option.selected {
+  background: var(--primary);
+}
+
+.status-option-icon {
+  width: 22px;
+
+  text-align: center;
+  font-size: 16px;
+}
+
+.status-option-text {
+  flex: 1;
+
+  font-size: 12px;
+}
+
+.status-check {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   TAG MENU
+   ========================================================= */
+
+.tag-section {
+  width: 100%;
+}
+
+.tag-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+
+  padding: 5px 7px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: transparent;
+  color: #9ca3af;
+
+  font-size: 12px;
+
+  text-align: left;
+
+  transition: background 0.15s ease;
+}
+
+.tag-button:hover {
+  background: #374151;
+  color: #f9fafb;
+}
+
+.tag-menu {
+  max-height: 300px;
+
+  margin: 5px 0 8px;
+  padding: 8px;
+
+  overflow-y: auto;
+
+  border: 1px solid #374151;
+  border-radius: 10px;
+
+  background: #1f2937;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.tag-menu-header {
+  padding: 5px 7px 8px;
+}
+
+.tag-menu-header strong {
+  display: block;
+
+  color: #f9fafb;
+
+  font-size: 13px;
+}
+
+.tag-menu-header span {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+}
+
+.tag-options {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tag-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  width: 100%;
+
+  padding: 8px 9px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: transparent;
+  color: #f9fafb;
+
+  text-align: left;
+
+  transition: background 0.15s ease;
+}
+
+.tag-option:hover {
+  background: #374151;
+}
+
+.tag-option.selected {
+  background: var(--primary);
+}
+
+.tag-option-icon {
+  width: 22px;
+
+  text-align: center;
+  font-size: 16px;
+}
+
+.tag-option-text {
+  flex: 1;
+
+  font-size: 12px;
+}
+
+.tag-check {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
 
 .sidebar > button:last-child {
   margin-top: auto;
+
   background: #7f1d1d;
 }
 
@@ -283,61 +685,81 @@ button {
   background: #991b1b;
 }
 
-/* Main chat */
+
+/* =========================================================
+   CHAT
+   ========================================================= */
 
 .chat {
   display: flex;
   flex-direction: column;
+
   min-width: 0;
   height: 100vh;
+
   background: #f9fafb;
 }
 
-/* Chat header */
+
+/* =========================================================
+   CHAT HEADER
+   ========================================================= */
 
 .chat-header {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 13px;
 
-  min-height: 86px;
-  padding: 18px 30px;
+  min-height: 78px;
+
+  padding: 16px 28px;
 
   background: #ffffff;
+
   border-bottom: 1px solid #e5e7eb;
 }
 
 .chat-header h3 {
   margin: 0;
-  font-size: 20px;
+
+  font-size: 19px;
+  font-weight: 700;
 }
 
 .chat-header p {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
+
   color: #6b7280;
-  font-size: 13px;
+
+  font-size: 12px;
 }
 
-/* =========================
+
+/* =========================================================
    MESSAGES
-   ========================= */
+   ========================================================= */
 
 .messages {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 9px;
 
   flex: 1;
   min-height: 0;
+
   width: 100%;
 
-  padding: 24px 30px;
+  padding: 22px 28px;
+
   overflow-y: auto;
 
   background: #f9fafb;
 }
 
-/* Message row */
+
+/* =========================================================
+   MESSAGE WRAPPER
+   ========================================================= */
 
 .message-wrapper {
   display: flex;
@@ -349,79 +771,86 @@ button {
   margin: 0;
 }
 
-/* YOUR messages = RIGHT */
-
 .message-wrapper.sent {
   align-self: flex-end;
   align-items: flex-end;
-  margin-left: auto;
-  margin-right: 0;
-}
 
-/* OTHER person's messages = LEFT */
+  margin-left: auto;
+}
 
 .message-wrapper.received {
   align-self: flex-start;
   align-items: flex-start;
-  margin-left: 0;
+
   margin-right: auto;
 }
 
-/* Username above message */
+
+/* =========================================================
+   MESSAGE USERNAME
+   ========================================================= */
 
 .message-username {
-  margin: 0 8px 4px;
+  margin: 0 8px 3px;
 
   color: #6b7280;
-  font-size: 12px;
+
+  font-size: 11px;
   font-weight: 700;
 }
 
-/* Message bubble */
+
+/* =========================================================
+   MESSAGE BUBBLE
+   ========================================================= */
 
 .message {
   width: fit-content;
   max-width: 720px;
 
-  padding: 11px 15px;
+  padding: 10px 14px;
 
-  border-radius: 16px;
+  border-radius: 15px;
 
   line-height: 1.45;
-  white-space: normal;
+
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
-/* YOUR bubble */
+
+/* Sent */
 
 .message-wrapper.sent .message {
   background: var(--primary);
-  color: white;
+  color: #ffffff;
 
-  border-bottom-right-radius: 5px;
+  border-bottom-right-radius: 4px;
 }
 
-/* OTHER person's bubble */
+
+/* Received */
 
 .message-wrapper.received .message {
   background: #e5e7eb;
   color: #111827;
 
-  border-bottom-left-radius: 5px;
+  border-bottom-left-radius: 4px;
 }
 
-/* =========================
+
+/* =========================================================
    MESSAGE COMPOSER
-   ========================= */
+   ========================================================= */
 
 .message-box {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 
-  padding: 18px 30px;
+  padding: 15px 28px;
 
   background: #ffffff;
+
   border-top: 1px solid #e5e7eb;
 }
 
@@ -429,84 +858,105 @@ button {
   flex: 1;
   min-width: 0;
 
-  padding: 13px 15px;
+  padding: 12px 14px;
 
   border: 1px solid #d1d5db;
-  border-radius: 12px;
+  border-radius: 11px;
+
   outline: none;
 
   background: #ffffff;
   color: #111827;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.message-box input::placeholder {
+  color: #9ca3af;
 }
 
 .message-box input:focus {
   border-color: var(--primary);
 
-  box-shadow: 0 0 0 3px color-mix(
-    in srgb,
-    var(--primary) 15%,
-    transparent
-  );
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .message-box button {
-  min-width: 90px;
-  padding: 0 20px;
+  min-width: 82px;
+
+  padding: 0 18px;
 
   border: 0;
-  border-radius: 12px;
+  border-radius: 11px;
 
   background: var(--primary);
-  color: white;
+  color: #ffffff;
 
   font-weight: 700;
+
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
 }
 
 .message-box button:hover {
-  filter: brightness(0.95);
+  background: var(--primary-hover);
 }
 
-/* =========================
+.message-box button:active {
+  transform: scale(0.98);
+}
+
+
+/* =========================================================
    SCROLLBARS
-   ========================= */
+   ========================================================= */
 
 .sidebar::-webkit-scrollbar,
-.messages::-webkit-scrollbar {
-  width: 8px;
+.messages::-webkit-scrollbar,
+.tag-menu::-webkit-scrollbar {
+  width: 7px;
 }
 
 .sidebar::-webkit-scrollbar-thumb,
-.messages::-webkit-scrollbar-thumb {
+.tag-menu::-webkit-scrollbar-thumb {
   border-radius: 10px;
+
   background: #374151;
 }
 
 .messages::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+
   background: #d1d5db;
 }
 
-/* =========================
+
+/* =========================================================
    DARK MODE
-   ========================= */
+   ========================================================= */
 
 .app[data-theme="dark"] {
   background: #0f1117;
   color: #f9fafb;
 }
 
+
 /* Sidebar */
 
 .app[data-theme="dark"] .sidebar {
   background: #151821;
-  color: #f9fafb;
   border-right-color: #262b38;
 }
 
-.app[data-theme="dark"] .friend {
+.app[data-theme="dark"] .friend,
+.app[data-theme="dark"] .settings {
   background: #1d222d;
 }
 
-.app[data-theme="dark"] .friend:hover,
 .app[data-theme="dark"] .contact-item:hover {
   background: #272d3b;
 }
@@ -515,11 +965,30 @@ button {
   color: #8f98aa;
 }
 
-/* Settings */
 
-.app[data-theme="dark"] .settings {
-  background: #1d222d;
+/* Sidebar inputs */
+
+.app[data-theme="dark"] .sidebar > div > input,
+.app[data-theme="dark"] .contacts input,
+.app[data-theme="dark"] .groups input {
+  background: #11151d;
+  border-color: #303746;
 }
+
+
+/* Status / tag menus */
+
+.app[data-theme="dark"] .status-menu,
+.app[data-theme="dark"] .tag-menu {
+  background: #1d222d;
+  border-color: #303746;
+}
+
+.app[data-theme="dark"] .status-option:hover,
+.app[data-theme="dark"] .tag-option:hover {
+  background: #272d3b;
+}
+
 
 /* Chat */
 
@@ -536,11 +1005,10 @@ button {
   color: #8f98aa;
 }
 
-/* Message area */
-
 .app[data-theme="dark"] .messages {
   background: #0f1117;
 }
+
 
 /* Received message */
 
@@ -548,25 +1016,28 @@ button {
   background: #252b36;
   color: #f9fafb;
 
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
 }
+
 
 /* Sent message */
 
 .app[data-theme="dark"] .message-wrapper.sent .message {
   background: var(--primary);
-  color: white;
+  color: #ffffff;
 
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
 }
 
-/* Username */
+
+/* Message username */
 
 .app[data-theme="dark"] .message-username {
   color: #8f98aa;
 }
 
-/* Message box */
+
+/* Composer */
 
 .app[data-theme="dark"] .message-box {
   background: #151821;
@@ -583,92 +1054,81 @@ button {
   color: #737c8f;
 }
 
-/* Contacts */
 
-.app[data-theme="dark"] .contacts > div {
-  background: #1d222d;
-}
-
-.app[data-theme="dark"] .group-members {
-  border-top-color: #303746;
-}
-
-/* Dark scrollbar */
-
-.app[data-theme="dark"] .messages::-webkit-scrollbar-thumb {
-  background: #374151;
-}
-
-/* =========================
+/* =========================================================
    LOGIN / SIGNUP
-   ========================= */
+   ========================================================= */
 
 .auth-page {
-  min-height: 100vh;
-  width: 100%;
-
   display: flex;
   align-items: center;
   justify-content: center;
 
-  background: #0f1117;
+  width: 100%;
+  min-height: 100vh;
+
   padding: 20px;
+
+  background: #0f1117;
 }
 
 .auth-box {
   width: 100%;
   max-width: 430px;
 
-  padding: 35px;
+  padding: 32px;
 
-  background: #151821;
   border: 1px solid #262b38;
   border-radius: 16px;
+
+  background: #151821;
 
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 }
 
 .auth-box h1 {
-  margin: 0 0 8px;
+  margin: 0 0 7px;
 
-  text-align: center;
-
-  color: white;
+  color: #ffffff;
 
   font-size: 26px;
-  font-weight: bold;
+  font-weight: 700;
+
+  text-align: center;
 }
 
 .auth-box h2 {
-  margin: 0 0 25px;
-
-  text-align: center;
+  margin: 0 0 23px;
 
   color: #8f98aa;
 
-  font-size: 15px;
-  font-weight: normal;
+  font-size: 14px;
+  font-weight: 400;
+
+  text-align: center;
 }
 
-/* Login / Signup form */
+
+/* Auth form */
 
 .auth-box form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 11px;
 }
 
 .auth-box input {
   width: 100%;
 
-  padding: 13px;
+  padding: 12px;
 
   border: 1px solid #303746;
   border-radius: 10px;
+
   outline: none;
 
   background: #1d222d;
-  color: white;
+  color: #ffffff;
 }
 
 .auth-box input::placeholder {
@@ -676,74 +1136,70 @@ button {
 }
 
 .auth-box input:focus {
-  border-color: #6366f1;
+  border-color: var(--primary);
 
   box-shadow:
     0 0 0 2px rgba(99, 102, 241, 0.12);
 }
 
-/* Login / Create account button */
+
+/* Auth button */
 
 .auth-box form button {
   width: 100%;
 
-  padding: 13px;
-  margin-top: 5px;
+  margin-top: 4px;
+  padding: 12px;
 
-  border: none;
+  border: 0;
   border-radius: 10px;
 
-  background: #6366f1;
-  color: white;
+  background: var(--primary);
+  color: #ffffff;
 
-  font-weight: bold;
+  font-weight: 700;
 
   transition: background 0.15s ease;
 }
 
 .auth-box form button:hover {
-  background: #5558d9;
+  background: var(--primary-hover);
 }
 
-/* Error */
+
+/* Auth messages */
+
+.auth-error,
+.auth-message {
+  margin: 14px 0 0;
+
+  padding: 9px;
+
+  border-radius: 8px;
+
+  font-size: 12px;
+}
 
 .auth-error {
-  margin: 15px 0 0;
-
-  padding: 10px;
-
-  border-radius: 8px;
-
   background: #351c21;
   color: #fca5a5;
-
-  font-size: 13px;
 }
-
-/* Success message */
 
 .auth-message {
-  margin: 15px 0 0;
-
-  padding: 10px;
-
-  border-radius: 8px;
-
   background: #193321;
   color: #86efac;
-
-  font-size: 13px;
 }
 
-/* Switch login/signup */
+
+/* Switch */
 
 .switch-auth {
   width: 100%;
 
-  margin-top: 18px;
-  padding: 10px;
+  margin-top: 16px;
+  padding: 9px;
 
-  border: none;
+  border: 0;
 
   background: transparent;
   color: #8f98aa;
@@ -753,354 +1209,42 @@ button {
   color: #a5b4fc;
 }
 
-/* Mobile login */
+
+/* =========================================================
+   MOBILE AUTH
+   ========================================================= */
 
 @media (max-width: 500px) {
   .auth-box {
-    padding: 28px 22px;
+    padding: 26px 20px;
   }
 }
 
-/* =========================
-   DESKTOP SIZING
-   ========================= */
+
+/* =========================================================
+   LARGE DESKTOP
+   ========================================================= */
 
 @media (min-width: 1400px) {
   .app {
-    grid-template-columns: 360px minmax(0, 1fr);
+    grid-template-columns: 350px minmax(0, 1fr);
   }
 
   .sidebar {
-    width: 360px;
-    padding-left: 24px;
-    padding-right: 24px;
+    width: 350px;
+
+    padding-left: 22px;
+    padding-right: 22px;
   }
 
   .messages {
-    padding-left: 48px;
-    padding-right: 48px;
+    padding-left: 42px;
+    padding-right: 42px;
   }
 
   .chat-header,
   .message-box {
-    padding-left: 48px;
-    padding-right: 48px;
+    padding-left: 42px;
+    padding-right: 42px;
   }
-}
-.contact-name-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.unread-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
-
-  border-radius: 50%;
-
-  background: var(--primary);
-  color: white;
-
-  font-size: 11px;
-  font-weight: bold;
-}
-.messages {
-  overflow-y: auto;
-}
-
-
-
-.contact-details {
-  min-width: 0;
-  flex: 1;
-}
-
-.contact-details .contact-name-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.contact-details .contact-status {
-  margin: 2px 0 0;
-}
-/* =========================
-   USER STATUS
-   ========================= */
-
-.status-button {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 6px 9px;
-
-  border: 0;
-  border-radius: 8px;
-
-  background: transparent;
-  color: #9ca3af;
-
-  font-size: 12px;
-  text-align: left;
-}
-
-.status-button:hover {
-  background: #374151;
-  color: #f9fafb;
-}
-
-.status-arrow {
-  font-size: 9px;
-  opacity: 0.6;
-}
-
-.status-menu {
-  margin: 6px 0 10px;
-  padding: 8px;
-
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 10px;
-
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-}
-
-.status-menu-header {
-  padding: 6px 8px 8px;
-}
-
-.status-menu-header strong {
-  display: block;
-  color: #f9fafb;
-  font-size: 13px;
-}
-
-.status-menu-header span {
-  display: block;
-  margin-top: 2px;
-  color: #9ca3af;
-  font-size: 11px;
-}
-
-.status-options {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.status-option {
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-  gap: 9px;
-
-  padding: 8px 9px;
-
-  border: 0;
-  border-radius: 7px;
-
-  background: transparent;
-  color: #f9fafb;
-
-  text-align: left;
-}
-
-.status-option:hover {
-  background: #374151;
-}
-
-.status-option.selected {
-  background: #6366f1;
-}
-
-.status-option-icon {
-  width: 22px;
-  text-align: center;
-}
-
-.status-option-text {
-  flex: 1;
-  font-size: 12px;
-}
-
-.status-check {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-
-/* =========================
-   USER TAGS
-   ========================= */
-
-.tag-section {
-  width: 100%;
-}
-
-.tag-button {
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 6px 9px;
-
-  border: 0;
-  border-radius: 8px;
-
-  background: transparent;
-  color: #9ca3af;
-
-  font-size: 12px;
-  text-align: left;
-}
-
-.tag-button:hover {
-  background: #374151;
-  color: #f9fafb;
-}
-
-.tag-menu {
-  margin: 6px 0 10px;
-  padding: 8px;
-
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 10px;
-
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.tag-menu-header {
-  padding: 6px 8px 8px;
-}
-
-.tag-menu-header strong {
-  display: block;
-  color: #f9fafb;
-  font-size: 13px;
-}
-
-.tag-menu-header span {
-  display: block;
-  margin-top: 2px;
-  color: #9ca3af;
-  font-size: 11px;
-}
-
-.tag-options {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.tag-option {
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-  gap: 9px;
-
-  padding: 8px 9px;
-
-  border: 0;
-  border-radius: 7px;
-
-  background: transparent;
-  color: #f9fafb;
-
-  text-align: left;
-}
-
-.tag-option:hover {
-  background: #374151;
-}
-
-.tag-option.selected {
-  background: #6366f1;
-}
-
-.tag-option-icon {
-  width: 22px;
-  text-align: center;
-}
-
-.tag-option-text {
-  flex: 1;
-  font-size: 12px;
-}
-
-.tag-check {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.contact-tag {
-  margin-top: 2px;
-
-  color: #a5b4fc;
-
-  font-size: 11px;
-  font-weight: 500;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-
-/* =========================
-   CONTACT DETAILS
-   ========================= */
-
-.contact-details {
-  min-width: 0;
-  flex: 1;
-}
-
-.contact-details .contact-name-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.contact-details .contact-status {
-  margin: 2px 0 0;
-}
-
-.contact-item > .contact-name-row {
-  flex: 1;
-}
-
-.contact-item > .contact-tag {
-  flex: none;
-}
-
-
-/* =========================
-   DARK MODE
-   ========================= */
-
-.app[data-theme="dark"] .status-menu,
-.app[data-theme="dark"] .tag-menu {
-  background: #1d222d;
-  border-color: #303746;
-}
-
-.app[data-theme="dark"] .status-option:hover,
-.app[data-theme="dark"] .tag-option:hover {
-  background: #272d3b;
 }

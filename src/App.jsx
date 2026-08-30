@@ -96,7 +96,23 @@ function App() {
 }
 
 function Chat({ user }) {
-  const ADMIN_TAG_USER_ID = "b832f7f4-19d2-4b8a-ab38-bdb4c61ea161";
+  const CUSTOM_TAG_PERMISSIONS = {
+  admin: [
+    "b832f7f4-19d2-4b8a-ab38-bdb4c61ea161",
+  ],
+
+  dragon: [
+    "47b9cc06-b92d-4143-b14c-627ce9408300",
+  ],
+
+  dodo_queen: [
+    "Mia",
+  ],
+
+  designer: [
+    "USER_UUID_4",
+  ],
+};
   const canUseAdminTag = user.id === ADMIN_TAG_USER_ID;
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -213,6 +229,15 @@ if (tagError) {
 
   loadProfile();
 }, [user.id]);
+function canUseTag(tagId) {
+  // Normal tags are available to everyone.
+  if (!CUSTOM_TAG_PERMISSIONS[tagId]) {
+    return true;
+  }
+
+  // Special tag: only specifically assigned accounts can use it.
+  return CUSTOM_TAG_PERMISSIONS[tagId].includes(user.id);
+}
 
 useEffect(() => {
   if (!user?.id) return;
@@ -367,6 +392,13 @@ useEffect(() => {
 async function changeTag(newTag) {
   if (!USER_TAGS[newTag]) return;
 
+  if (!canUseTag(newTag)) {
+    console.warn(
+      `User ${user.id} is not allowed to use tag ${newTag}`
+    );
+    return;
+  }
+
   const { error } = await supabase
     .from("profile_tags")
     .upsert(
@@ -389,6 +421,7 @@ async function changeTag(newTag) {
   setUserTag(newTag);
   setShowTagPicker(false);
 }
+
 
 
 useEffect(() => {
@@ -1262,16 +1295,9 @@ async function logOut() {
 
         <div className="tag-options">
           {Object.entries(USER_TAGS)
-  .filter(([tagId]) => {
-    // Admin only appears for the account
-    // specifically allowed to use it.
-    if (tagId === "admin") {
-      return canUseAdminTag;
-    }
-
-    return true;
-  })
+  .filter(([tagId]) => canUseTag(tagId))
   .map(([tagId, tag]) => (
+
 
               <button
                 type="button"
@@ -2063,6 +2089,14 @@ const USER_TAGS = {
   admin: {
     label: "Admin",
     emoji: "👑",
+  },
+  admin: {
+    label: "Dragon",
+    emoji: "🐉",
+  },
+  admin: {
+    label: "Dodo Queen",
+    emoji: "🦤",
   },
   just_chatting: {
     label: "Just Chatting",

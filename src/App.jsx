@@ -1429,14 +1429,14 @@ console.log("MESSAGES BETWEEN US:", testMessages);
 console.log("TEST ERROR:", testError);
 
   const { data, error } = await supabase
-    .from("messages")
-    .update({
-      read_at: new Date().toISOString(),
-    })
-    .eq("user_id", contactId)
-    .eq("recipient_id", user.id)
-    .is("read_at", null)
-    .select();
+  .from("messages")
+  .update({
+    read_at: new Date().toISOString(),
+  })
+  .eq("user_id", contactId)
+  .eq("recipient_id", user.id)
+  .select();
+
 
   console.log("Messages marked as read:", data);console.log("Messages marked as read:", data);
 alert(JSON.stringify(data));

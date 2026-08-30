@@ -1408,9 +1408,6 @@ setMemberError("");
     onClick={async () => {
   const contactId = contact.profiles.id;
 
-  console.log("Opening contact:", contactId);
-  console.log("Current user:", user.id);
-
   setSelectedContact(contact.profiles);
   setSelectedGroup(null);
 
@@ -1418,37 +1415,21 @@ setMemberError("");
     ...current,
     [contactId]: 0,
   }));
-const { data: testMessages, error: testError } = await supabase
-  .from("messages")
-  .select("id, user_id, recipient_id, read_at")
-  .or(
-    `and(user_id.eq.${contactId},recipient_id.eq.${user.id}),and(user_id.eq.${user.id},recipient_id.eq.${contactId})`
-  );
 
-console.log("MESSAGES BETWEEN US:", testMessages);
-console.log("TEST ERROR:", testError);
-
-  const { data, error } = await supabase
-  .from("messages")
-  .update({
-    read_at: new Date().toISOString(),
-  })
-  .eq("user_id", contactId)
-  .eq("recipient_id", user.id)
-  .is("read_at", null)
-  .select();
-
-
-
-  console.log("Messages marked as read:", data);console.log("Messages marked as read:", data);
-alert(JSON.stringify(data));
-
-  console.log("Mark as read error:", error);
+  const { error } = await supabase
+    .from("messages")
+    .update({
+      read_at: new Date().toISOString(),
+    })
+    .eq("user_id", contactId)
+    .eq("recipient_id", user.id)
+    .is("read_at", null);
 
   if (error) {
     console.error("Error marking messages as read:", error);
   }
 }}
+
 
 >
     <div className="avatar">

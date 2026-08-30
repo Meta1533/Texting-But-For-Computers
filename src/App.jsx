@@ -1429,7 +1429,9 @@ setMemberError("");
     .is("read_at", null)
     .select();
 
-  console.log("Messages marked as read:", data);
+  console.log("Messages marked as read:", data);console.log("Messages marked as read:", data);
+alert(JSON.stringify(data));
+
   console.log("Mark as read error:", error);
 
   if (error) {

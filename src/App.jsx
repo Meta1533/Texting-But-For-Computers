@@ -96,6 +96,8 @@ function App() {
 }
 
 function Chat({ user }) {
+  const ADMIN_TAG_USER_ID = "b832f7f4-19d2-4b8a-ab38-bdb4c61ea161";
+  const canUseAdminTag = user.id === ADMIN_TAG_USER_ID;
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
@@ -1259,8 +1261,18 @@ async function logOut() {
         </div>
 
         <div className="tag-options">
-          {Object.entries(USER_TAGS).map(
-            ([tagId, tag]) => (
+          {Object.entries(USER_TAGS)
+  .filter(([tagId]) => {
+    // Admin only appears for the account
+    // specifically allowed to use it.
+    if (tagId === "admin") {
+      return canUseAdminTag;
+    }
+
+    return true;
+  })
+  .map(([tagId, tag]) => (
+
               <button
                 type="button"
                 key={tagId}
@@ -2048,6 +2060,10 @@ async function logOut() {
 
 export default App;
 const USER_TAGS = {
+  admin: {
+    label: "Admin",
+    emoji: "👑",
+  },
   just_chatting: {
     label: "Just Chatting",
     emoji: "💬",
@@ -2154,7 +2170,7 @@ const USER_TAGS = {
   },
   silly_goose: {
     label: "Silly Goose",
-    emoji: "🐸",
+    emoji: "🪿",
   },
   in_my_feels: {
     label: "In My Feels",
@@ -2167,5 +2183,9 @@ const USER_TAGS = {
   here_for_a_good_time: {
     label: "Here for a Good Time",
     emoji: "🪩",
+  },
+    here_for_a_good_time: {
+    label: "Jock",
+    emoji: "🏈",
   },
 };

@@ -123,11 +123,20 @@ function Chat({ user }) {
   const messagesEndRef = useRef(null);
   const presenceChannelRef = useRef(null);
   const presenceReadyRef = useRef(false);
+  const selectedContactRef = useRef(null);
+  const selectedGroupRef = useRef(null);
   const [userStatus, setUserStatus] = useState("online");
   const [presenceUsers, setPresenceUsers] = useState({});
   const [showStatusPicker, setShowStatusPicker] = useState(false);
  
   console.log("CURRENT USER ID:", user.id);
+
+
+useEffect(() => {
+  selectedContactRef.current = selectedContact;
+  selectedGroupRef.current = selectedGroup;
+}, [selectedContact, selectedGroup]);
+
 
   useEffect(() => {
   async function loadProfile() {
@@ -604,17 +613,36 @@ useEffect(() => {
       (payload) => {
         const newMessage = payload.new;
 
-        // If you're currently talking to this person,
-        // don't show an unread number.
-        if (
-          selectedContact &&
-          selectedContact.id === newMessage.user_id &&
-          !selectedGroup
-        ) {
+        // Ignore messages sent to yourself.
+        if (newMessage.user_id === user.id) {
           return;
         }
 
-        // Otherwise, increase their unread number.
+        // If this conversation is currently open,
+        // mark the new message as read immediately.
+        if (
+          selectedContactRef.current?.id === newMessage.user_id &&
+          !selectedGroupRef.current
+        ) {
+          supabase
+            .from("messages")
+            .update({
+              read_at: new Date().toISOString(),
+            })
+            .eq("id", newMessage.id)
+            .then(({ error }) => {
+              if (error) {
+                console.error(
+                  "Error marking realtime message as read:",
+                  error
+                );
+              }
+            });
+
+          return;
+        }
+
+        // Otherwise, increase the unread count.
         setUnreadCounts((current) => ({
           ...current,
           [newMessage.user_id]:
@@ -622,12 +650,15 @@ useEffect(() => {
         }));
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log("Unread realtime status:", status);
+    });
 
   return () => {
     supabase.removeChannel(channel);
   };
-}, [user.id, selectedContact, selectedGroup]);
+}, [user.id]);
+
   
   async function sendMessage() {
   if (message.trim() === "") return;
@@ -698,17 +729,23 @@ useEffect(() => {
 
   // Mark any messages from the other person as read
   const { error: readError } = await supabase
-    .from("messages")
-    .update({
-      read_at: new Date().toISOString(),
-    })
-    .eq("user_id", selectedContact.id)
-    .eq("recipient_id", user.id)
-    .is("read_at", null);
+  .from("messages")
+  .update({
+    read_at: new Date().toISOString(),
+  })
+  .eq("user_id", selectedContact.id)
+  .eq("recipient_id", user.id)
+  .is("read_at", null);
 
-  if (readError) {
-    console.error("Error marking messages as read:", readError);
-  }
+if (readError) {
+  console.error("Error marking messages as read:", readError);
+} else {
+  setUnreadCounts((current) => ({
+    ...current,
+    [selectedContact.id]: 0,
+  }));
+}
+
 }
 async function searchForContact() {
   const search = contactSearch.trim();
@@ -1369,29 +1406,32 @@ setMemberError("");
     className="contact-item"
     key={contact.id}
     onClick={async () => {
-  setSelectedContact(contact.profiles);
-  setSelectedGroup(null);
+    const contactId = contact.profiles.id;
 
-  // Mark all messages from this contact as read.
-  const { error } = await supabase
-    .from("messages")
-    .update({ read_at: new Date().toISOString() })
-    .eq("user_id", contact.profiles.id)
-    .eq("recipient_id", user.id)
-    .is("read_at", null);
+    setSelectedContact(contact.profiles);
+    setSelectedGroup(null);
 
-  if (error) {
-    console.error("Error marking messages as read:", error);
-    return;
-  }
+    // Immediately remove the unread badge.
+    setUnreadCounts((current) => ({
+      ...current,
+      [contactId]: 0,
+    }));
 
-  // Remove their unread badge immediately.
-  setUnreadCounts((current) => ({
-    ...current,
-    [contact.profiles.id]: 0,
-  }));
-}}
-  >
+    // Mark all messages from this contact as read.
+    const { error } = await supabase
+      .from("messages")
+      .update({
+        read_at: new Date().toISOString(),
+      })
+      .eq("user_id", contactId)
+      .eq("recipient_id", user.id)
+      .is("read_at", null);
+
+    if (error) {
+      console.error("Error marking messages as read:", error);
+    }
+  }}
+>
     <div className="avatar">
       {contact.profiles.username.charAt(0).toUpperCase()}
     </div>

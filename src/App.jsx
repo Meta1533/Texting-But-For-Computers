@@ -128,7 +128,10 @@ function Chat({ user }) {
   const [userStatus, setUserStatus] = useState("online");
   const [presenceUsers, setPresenceUsers] = useState({});
   const [showStatusPicker, setShowStatusPicker] = useState(false);
- 
+  const [userTag, setUserTag] = useState("just_chatting");
+  const [showTagPicker, setShowTagPicker] = useState(false);
+  const [profileTags, setProfileTags] = useState({});
+
   console.log("CURRENT USER ID:", user.id);
 
 
@@ -143,6 +146,7 @@ useEffect(() => {
     const { data, error } = await supabase
   .from("profiles")
   .select("username, theme, dark_mode")
+
   .eq("id", user.id)
   .single();
 
@@ -154,12 +158,96 @@ useEffect(() => {
     setUsername(data.username);
     setTheme(data.theme || "purple");
     setDarkMode(data.dark_mode ?? false);
+
+    const { data: tagData, error: tagError } = await supabase
+  .from("profile_tags")
+  .select("tag_id")
+  .eq("user_id", user.id)
+  .maybeSingle();
+
+if (tagError) {
+  console.error("Error loading profile tag:", tagError);
+} else if (tagData) {
+  setUserTag(tagData.tag_id);
+}
+
   }
 
 
 
   loadProfile();
 }, [user.id]);
+
+useEffect(() => {
+  if (!user?.id) return;
+
+  async function loadAllTags() {
+    const { data, error } = await supabase
+      .from("profile_tags")
+      .select("user_id, tag_id");
+
+    if (error) {
+      console.error("Error loading profile tags:", error);
+      return;
+    }
+
+    const tags = {};
+
+    (data || []).forEach((tag) => {
+      tags[tag.user_id] = tag.tag_id;
+    });
+
+    setProfileTags(tags);
+  }
+
+  loadAllTags();
+
+  const channel = supabase
+    .channel(`profile-tags-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "profile_tags",
+      },
+      (payload) => {
+        console.log("Profile tag realtime update:", payload);
+
+        if (payload.eventType === "DELETE") {
+          setProfileTags((current) => {
+            const updated = { ...current };
+            delete updated[payload.old.user_id];
+            return updated;
+          });
+
+          return;
+        }
+
+        const changedTag = payload.new;
+
+        if (!changedTag?.user_id) return;
+
+        setProfileTags((current) => ({
+          ...current,
+          [changedTag.user_id]: changedTag.tag_id,
+        }));
+
+        // Update our own tag if another realtime event reports it.
+        if (changedTag.user_id === user.id) {
+          setUserTag(changedTag.tag_id);
+        }
+      }
+    )
+    .subscribe((status) => {
+      console.log("Profile tag realtime status:", status);
+    });
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [user.id]);
+
 
 function changeStatus(newStatus) {
   if (!USER_STATUSES[newStatus]) return;
@@ -239,6 +327,33 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [user.id]);
+
+async function changeTag(newTag) {
+  if (!USER_TAGS[newTag]) return;
+
+  const { error } = await supabase
+    .from("profile_tags")
+    .upsert(
+      {
+        user_id: user.id,
+        tag_id: newTag,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "user_id",
+      }
+    );
+
+  if (error) {
+    console.error("Error saving tag:", error);
+    alert("Could not save tag: " + error.message);
+    return;
+  }
+
+  setUserTag(newTag);
+  setShowTagPicker(false);
+}
+
 
 useEffect(() => {
   const channel = presenceChannelRef.current;
@@ -1017,6 +1132,60 @@ async function logOut() {
     setShowStatusPicker((current) => !current);
   }}
 >
+
+
+  <div className="tag-section">
+  <button
+    className="tag-button"
+    onClick={() => {
+      setShowTagPicker((current) => !current);
+    }}
+  >
+    <span>
+      {USER_TAGS[userTag]?.emoji}{" "}
+      {USER_TAGS[userTag]?.label || "Choose a tag"}
+    </span>
+
+    <span className="status-arrow">
+      {showTagPicker ? "▲" : "▼"}
+    </span>
+  </button>
+</div>
+
+{showTagPicker && (
+  <div className="tag-menu">
+    <div className="tag-menu-header">
+      <strong>Choose your tag</strong>
+      <span>Show people your vibe</span>
+    </div>
+
+    <div className="tag-options">
+      {Object.entries(USER_TAGS).map(([tagId, tag]) => (
+        <button
+          key={tagId}
+          className={`tag-option ${
+            userTag === tagId ? "selected" : ""
+          }`}
+          onClick={() => changeTag(tagId)}
+        >
+          <span className="tag-option-icon">
+            {tag.emoji}
+          </span>
+
+          <span className="tag-option-text">
+            {tag.label}
+          </span>
+
+          {userTag === tagId && (
+            <span className="tag-check">✓</span>
+          )}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+
+
   <span>
     {USER_STATUSES[userStatus].emoji}{" "}
     {USER_STATUSES[userStatus].label}
@@ -1436,15 +1605,65 @@ setMemberError("");
       {contact.profiles.username.charAt(0).toUpperCase()}
     </div>
 
-    <div className="contact-name-row">
-  <strong>{contact.profiles.username}</strong>
+    <div className="contact-details">
+  <div className="contact-name-row">
+    <strong>{contact.profiles.username}</strong>
 
-  {unreadCounts[contact.profiles.id] > 0 && (
-    <span className="unread-badge">
-      {unreadCounts[contact.profiles.id]}
-    </span>
-  )}
+    {unreadCounts[contact.profiles.id] > 0 && (
+      <span className="unread-badge">
+        {unreadCounts[contact.profiles.id]}
+      </span>
+    )}
+  </div>
+
+  {(() => {
+    const tagId = profileTags[contact.profiles.id];
+    const tag = USER_TAGS[tagId];
+
+    if (!tag) return null;
+
+    return (
+      <div className="contact-tag">
+        {tag.emoji} {tag.label}
+      </div>
+    );
+  })()}
+
+  {(() => {
+    const presence = presenceUsers[contact.profiles.id];
+
+    if (!presence) {
+      return (
+        <p className="contact-status offline">
+          ⚪ Offline
+        </p>
+      );
+    }
+
+    const status =
+      USER_STATUSES[presence.status] || USER_STATUSES.online;
+
+    return (
+      <p className="contact-status">
+        {status.emoji} {status.label}
+      </p>
+    );
+  })()}
 </div>
+
+{(() => {
+  const tagId = profileTags[contact.profiles.id];
+  const tag = USER_TAGS[tagId];
+
+  if (!tag) return null;
+
+  return (
+    <div className="contact-tag">
+      {tag.emoji} {tag.label}
+    </div>
+  );
+})()}
+
 
 {(() => {
   const presence = presenceUsers[contact.profiles.id];
@@ -1511,18 +1730,28 @@ setMemberError("");
           const presence =
             presenceUsers[selectedContact.id];
 
-          if (!presence) {
-            return "⚪ Offline";
+          const tagId = profileTags[selectedContact.id];
+          const tag = USER_TAGS[tagId];
+
+          const statusText = presence
+            ? `${
+                (USER_STATUSES[presence.status] ||
+                  USER_STATUSES.online).emoji
+              } ${
+                (USER_STATUSES[presence.status] ||
+                  USER_STATUSES.online).label
+              }`
+            : "⚪ Offline";
+
+          if (!tag) {
+            return statusText;
           }
 
-          const status =
-            USER_STATUSES[presence.status] ||
-            USER_STATUSES.online;
-
-          return `${status.emoji} ${status.label}`;
+          return `${tag.emoji} ${tag.label} • ${statusText}`;
         })()
       : "Choose someone from your contacts"}
 </p>
+
           </div>
         </header>
 
@@ -1570,3 +1799,125 @@ setMemberError("");
 }
 
 export default App;
+const USER_TAGS = {
+  just_chatting: {
+    label: "Just Chatting",
+    emoji: "💬",
+  },
+  night_owl: {
+    label: "Night Owl",
+    emoji: "🌙",
+  },
+  early_bird: {
+    label: "Early Bird",
+    emoji: "☀️",
+  },
+  certified_yapper: {
+    label: "Certified Yapper",
+    emoji: "😂",
+  },
+  bestie: {
+    label: "Bestie",
+    emoji: "🫶",
+  },
+  lurking: {
+    label: "Lurking",
+    emoji: "👀",
+  },
+  on_fire: {
+    label: "On Fire",
+    emoji: "🔥",
+  },
+  im_dead: {
+    label: "I'm Dead",
+    emoji: "💀",
+  },
+  overthinker: {
+    label: "Overthinker",
+    emoji: "🧠",
+  },
+  music_lover: {
+    label: "Music Lover",
+    emoji: "🎧",
+  },
+  gamer: {
+    label: "Gamer",
+    emoji: "🎮",
+  },
+  chronically_online: {
+    label: "Chronically Online",
+    emoji: "📱",
+  },
+  main_character: {
+    label: "Main Character",
+    emoji: "✨",
+  },
+  probably_sleeping: {
+    label: "Probably Sleeping",
+    emoji: "💤",
+  },
+  lowkey: {
+    label: "Lowkey",
+    emoji: "🤫",
+  },
+  icon: {
+    label: "Icon",
+    emoji: "💅",
+  },
+  barely_functioning: {
+    label: "Barely Functioning",
+    emoji: "🫠",
+  },
+  hopeless_romantic: {
+    label: "Hopeless Romantic",
+    emoji: "❤️",
+  },
+  vibing: {
+    label: "Vibing",
+    emoji: "🧃",
+  },
+  always_online: {
+    label: "Always Online",
+    emoji: "🚀",
+  },
+  softie: {
+    label: "Softie",
+    emoji: "🌸",
+  },
+  menace: {
+    label: "Menace",
+    emoji: "😈",
+  },
+  nerd: {
+    label: "Nerd",
+    emoji: "🤓",
+  },
+  talks_too_much: {
+    label: "Talks Too Much",
+    emoji: "🗣️",
+  },
+  mysterious: {
+    label: "Mysterious",
+    emoji: "🕶️",
+  },
+  top_tier: {
+    label: "Top Tier",
+    emoji: "🏆",
+  },
+  silly_goose: {
+    label: "Silly Goose",
+    emoji: "🐸",
+  },
+  in_my_feels: {
+    label: "In My Feels",
+    emoji: "🌧️",
+  },
+  big_brain: {
+    label: "Big Brain",
+    emoji: "💡",
+  },
+  here_for_a_good_time: {
+    label: "Here for a Good Time",
+    emoji: "🪩",
+  },
+};

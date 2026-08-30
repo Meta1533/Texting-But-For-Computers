@@ -220,6 +220,19 @@ button {
     background 0.15s ease,
     transform 0.1s ease;
 }
+.contact-item > .contact-name-row,
+.contact-item > .contact-tag {
+  min-width: 0;
+}
+
+.contact-item > .contact-name-row {
+  flex: 1;
+}
+
+.contact-item > .contact-tag {
+  flex: 1;
+}
+
 
 .contact-item:hover {
   background: #1f2937;
@@ -1157,4 +1170,172 @@ button {
 .status-arrow {
   font-size: 9px;
   opacity: 0.6;
+}
+/* =========================
+   USER TAGS
+   ========================= */
+
+.tag-section {
+  width: 100%;
+}
+
+.tag-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 6px 9px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+  color: inherit;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  text-align: left;
+}
+
+.tag-button:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.tag-menu {
+  margin: 8px 12px 14px;
+  padding: 10px;
+
+  background: #000000;
+
+  border: 1px solid #374151;
+  border-radius: 14px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.tag-menu-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  padding: 8px 10px 10px;
+}
+
+.tag-menu-header strong {
+  color: #f9fafb;
+  font-size: 14px;
+}
+
+.tag-menu-header span {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.tag-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tag-option {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 9px 10px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: transparent;
+  color: #f9fafb;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.tag-option:hover {
+  background: #272d3b;
+}
+
+.tag-option:active {
+  transform: scale(0.98);
+}
+
+.tag-option.selected {
+  background: var(--primary);
+}
+
+.tag-option-icon {
+  width: 28px;
+
+  display: flex;
+  justify-content: center;
+
+  font-size: 18px;
+}
+
+.tag-option-text {
+  flex: 1;
+
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tag-check {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Contact tag */
+
+.contact-tag {
+  margin-top: 2px;
+
+  color: #a5b4fc;
+
+  font-size: 11px;
+  font-weight: 500;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dark mode */
+
+.app[data-theme="dark"] .tag-menu {
+  background: #000000;
+  border-color: #303746;
+}
+
+.app[data-theme="dark"] .tag-option:hover {
+  background: #272d3b;
+}
+.contact-details {
+  min-width: 0;
+  flex: 1;
+}
+
+.contact-details .contact-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contact-details .contact-status {
+  margin: 2px 0 0;
 }

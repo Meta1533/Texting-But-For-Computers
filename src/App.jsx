@@ -106,14 +106,13 @@ function Chat({ user }) {
   ],
 
   dodo_queen: [
-    "Mia",
+    "USER_UUID_3",
   ],
 
   designer: [
     "USER_UUID_4",
   ],
 };
-  const canUseAdminTag = user.id === ADMIN_TAG_USER_ID;
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
@@ -2090,11 +2089,11 @@ const USER_TAGS = {
     label: "Admin",
     emoji: "👑",
   },
-  admin: {
+  dragon: {
     label: "Dragon",
     emoji: "🐉",
   },
-  admin: {
+  dodo_queen: {
     label: "Dodo Queen",
     emoji: "🦤",
   },

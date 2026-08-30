@@ -1406,31 +1406,37 @@ setMemberError("");
     className="contact-item"
     key={contact.id}
     onClick={async () => {
-    const contactId = contact.profiles.id;
+  const contactId = contact.profiles.id;
 
-    setSelectedContact(contact.profiles);
-    setSelectedGroup(null);
+  console.log("Opening contact:", contactId);
+  console.log("Current user:", user.id);
 
-    // Immediately remove the unread badge.
-    setUnreadCounts((current) => ({
-      ...current,
-      [contactId]: 0,
-    }));
+  setSelectedContact(contact.profiles);
+  setSelectedGroup(null);
 
-    // Mark all messages from this contact as read.
-    const { error } = await supabase
-      .from("messages")
-      .update({
-        read_at: new Date().toISOString(),
-      })
-      .eq("user_id", contactId)
-      .eq("recipient_id", user.id)
-      .is("read_at", null);
+  setUnreadCounts((current) => ({
+    ...current,
+    [contactId]: 0,
+  }));
 
-    if (error) {
-      console.error("Error marking messages as read:", error);
-    }
-  }}
+  const { data, error } = await supabase
+    .from("messages")
+    .update({
+      read_at: new Date().toISOString(),
+    })
+    .eq("user_id", contactId)
+    .eq("recipient_id", user.id)
+    .is("read_at", null)
+    .select();
+
+  console.log("Messages marked as read:", data);
+  console.log("Mark as read error:", error);
+
+  if (error) {
+    console.error("Error marking messages as read:", error);
+  }
+}}
+
 >
     <div className="avatar">
       {contact.profiles.username.charAt(0).toUpperCase()}

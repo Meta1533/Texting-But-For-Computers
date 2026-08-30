@@ -1418,6 +1418,15 @@ setMemberError("");
     ...current,
     [contactId]: 0,
   }));
+const { data: testMessages, error: testError } = await supabase
+  .from("messages")
+  .select("id, user_id, recipient_id, read_at")
+  .or(
+    `and(user_id.eq.${contactId},recipient_id.eq.${user.id}),and(user_id.eq.${user.id},recipient_id.eq.${contactId})`
+  );
+
+console.log("MESSAGES BETWEEN US:", testMessages);
+console.log("TEST ERROR:", testError);
 
   const { data, error } = await supabase
     .from("messages")

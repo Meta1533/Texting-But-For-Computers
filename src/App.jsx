@@ -134,6 +134,7 @@ function Chat({ user }) {
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [memberError, setMemberError] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [groupUnreadCounts, setGroupUnreadCounts] = useState({});
   const messagesEndRef = useRef(null);
   const presenceChannelRef = useRef(null);
   const presenceReadyRef = useRef(false);
@@ -174,13 +175,13 @@ function Chat({ user }) {
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [profileTags, setProfileTags] = useState({});
 // Sidebar collapsible sections
-const [profileOpen, setProfileOpen] = useState(true);
+const [profileOpen, setProfileOpen] = useState(false);
 const [usernameEditorOpen, setUsernameEditorOpen] = useState(false);
 const [settingsOpen, setSettingsOpen] = useState(false);
 const [addContactOpen, setAddContactOpen] = useState(false);
-const [contactsOpen, setContactsOpen] = useState(true);
-const [groupsOpen, setGroupsOpen] = useState(true);
-const [groupMembersOpen, setGroupMembersOpen] = useState(true);
+const [contactsOpen, setContactsOpen] = useState(false);
+const [groupsOpen, setGroupsOpen] = useState(false);
+const [groupMembersOpen, setGroupMembersOpen] = useState(false);
 const [createGroupOpen, setCreateGroupOpen] = useState(false);
 
   console.log("CURRENT USER ID:", user.id);
@@ -497,6 +498,39 @@ useEffect(() => {
   loadUnread();
 }, [user.id]);
 
+useEffect(() => {
+  async function loadUnreadGroupMessages() {
+    const { data, error } = await supabase
+      .from("group_messages")
+      .select("id, group_id, user_id, created_at")
+      .neq("user_id", user.id)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error loading unread group messages:", error);
+      return;
+    }
+
+    const counts = {};
+
+    (data || []).forEach((msg) => {
+      const storageKey = `group-last-read-${user.id}-${msg.group_id}`;
+      const lastRead = localStorage.getItem(storageKey);
+
+      // If we've never opened this group, count its messages.
+      if (!lastRead || new Date(msg.created_at) > new Date(lastRead)) {
+        counts[msg.group_id] = (counts[msg.group_id] || 0) + 1;
+      }
+    });
+
+    setGroupUnreadCounts(counts);
+  }
+
+  loadUnreadGroupMessages();
+}, [user.id]);
+
+
+
 
 useEffect(() => {
   async function loadGroups() {
@@ -732,6 +766,16 @@ useEffect(() => {
         const msg = payload.new;
 
         console.log("Group realtime message:", msg);
+
+        if (msg.user_id !== user.id) {
+  if (selectedGroupRef.current?.id !== msg.group_id) {
+    setGroupUnreadCounts((current) => ({
+      ...current,
+      [msg.group_id]: (current[msg.group_id] || 0) + 1,
+    }));
+  }
+}
+
 
         const { data: profile, error } = await supabase
           .from("profiles")
@@ -1588,10 +1632,11 @@ async function logOut() {
                 </strong>
 
                 {unreadCounts[contactId] > 0 && (
-                  <span className="unread-badge">
-                    {unreadCounts[contactId]}
-                  </span>
-                )}
+  <span className="unread-badge">
+    {unreadCounts[contactId]} new
+  </span>
+)}
+
               </div>
 
               {tag && (
@@ -1704,21 +1749,45 @@ async function logOut() {
             }`}
             key={group.id}
             onClick={() => {
-              setSelectedGroup(group);
-              setSelectedContact(null);
-              setGroupMembersOpen(true);
-            }}
+  setSelectedGroup(group);
+  setSelectedContact(null);
+  setGroupMembersOpen(false);
+
+  // Remember when this group was last viewed.
+  localStorage.setItem(
+    `group-last-read-${user.id}-${group.id}`,
+    new Date().toISOString()
+  );
+
+  // Immediately remove the badge.
+  setGroupUnreadCounts((current) => ({
+    ...current,
+    [group.id]: 0,
+  }));
+}}
+
+
           >
             <div className="avatar">
               {group.name.charAt(0).toUpperCase()}
             </div>
 
             <div className="contact-details">
-              <strong>{group.name}</strong>
+              <div className="contact-name-row">
+  <strong>{group.name}</strong>
 
-              <p className="contact-status">
-                Group chat
-              </p>
+  {groupUnreadCounts[group.id] > 0 && (
+  <span className="unread-badge">
+    {groupUnreadCounts[group.id]} new
+  </span>
+)}
+
+</div>
+
+<p className="contact-status">
+  Group chat
+</p>
+
             </div>
           </div>
         );

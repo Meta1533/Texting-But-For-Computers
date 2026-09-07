@@ -106,7 +106,7 @@ function Chat({ user }) {
   ],
 
   dodo_queen: [
-    "USER_UUID_3",
+    "c0c4ee29-9e7b-4a5f-a1b5-492e8e36114f",
   ],
 
   designer: [

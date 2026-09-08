@@ -131,15 +131,6 @@ function Chat({ user }) {
   const [unreadCounts, setUnreadCounts] = useState({});
   const [groupUnreadCounts, setGroupUnreadCounts] = useState({});
   const messagesEndRef = useRef(null);
-  function scrollToBottom() {
-  requestAnimationFrame(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "auto",
-      block: "end",
-    });
-  });
-}
-
   const presenceChannelRef = useRef(null);
   const presenceReadyRef = useRef(false);
   const selectedContactRef = useRef(null);
@@ -541,10 +532,11 @@ function Chat({ user }) {
 
   useEffect(() => {
   messagesEndRef.current?.scrollIntoView({
-    behavior: "auto",
+    behavior: "instant",
     block: "end",
   });
 }, [messages]);
+
 
 
   useEffect(() => {
@@ -1087,15 +1079,14 @@ function Chat({ user }) {
     // =========================
 
     if (selectedGroup) {
-      const { data, error } = await supabase
-        .from("group_messages")
-        .insert({
-          group_id: selectedGroup.id,
-          user_id: user.id,
-          content: messageToSend,
-        })
-        .select()
-        .single();
+      const { error } = await supabase
+  .from("group_messages")
+  .insert({
+    group_id: selectedGroup.id,
+    user_id: user.id,
+    content: messageToSend,
+  });
+
 
       if (error) {
         console.error(

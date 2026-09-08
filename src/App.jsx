@@ -130,8 +130,16 @@ function Chat({ user }) {
   const [memberError, setMemberError] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
   const [groupUnreadCounts, setGroupUnreadCounts] = useState({});
-
   const messagesEndRef = useRef(null);
+  function scrollToBottom() {
+  requestAnimationFrame(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "auto",
+      block: "end",
+    });
+  });
+}
+
   const presenceChannelRef = useRef(null);
   const presenceReadyRef = useRef(false);
   const selectedContactRef = useRef(null);
@@ -532,10 +540,12 @@ function Chat({ user }) {
   }, [user.id]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
-  }, [messages]);
+  messagesEndRef.current?.scrollIntoView({
+    behavior: "auto",
+    block: "end",
+  });
+}, [messages]);
+
 
   useEffect(() => {
     async function loadUnread() {
@@ -2023,10 +2033,10 @@ function Chat({ user }) {
                   }`}
                   key={contact.id}
                   onClick={async () => {
-                    setSelectedContact(
-                      contact.profiles
-                    );
-                    setSelectedGroup(null);
+  setSelectedContact(contact.profiles);
+  setSelectedGroup(null);
+  setMessages([]);
+
 
                     setUnreadCounts(
                       (current) => ({

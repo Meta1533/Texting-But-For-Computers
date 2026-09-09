@@ -1704,271 +1704,6 @@ function Chat({ user }) {
         </SidebarSection>
 
         {/* =====================================================
-            USERNAME
-            ===================================================== */}
-
-        <SidebarSection
-          icon="✏️"
-          title="Username"
-          open={usernameEditorOpen}
-          onToggle={() => {
-            setUsernameEditorOpen(
-              (current) => !current
-            );
-            setUsernameError("");
-            setNewUsername(username);
-          }}
-        >
-          <input
-            type="text"
-            placeholder="New username"
-            value={newUsername}
-            onChange={(event) => {
-              setNewUsername(
-                event.target.value
-              );
-              setUsernameError("");
-            }}
-            minLength={3}
-            maxLength={20}
-          />
-
-          <button
-            type="button"
-            className="sidebar-primary-button"
-            onClick={changeUsername}
-          >
-            Save username
-          </button>
-
-          {usernameError && (
-            <p className="sidebar-error">
-              {usernameError}
-            </p>
-          )}
-        </SidebarSection>
-
-        {/* =====================================================
-            SETTINGS
-            ===================================================== */}
-
-        <SidebarSection
-          icon="⚙️"
-          title="Settings"
-          open={settingsOpen}
-          onToggle={() =>
-            setSettingsOpen(
-              (current) => !current
-            )
-          }
-        >
-          <div className="settings">
-            <div className="settings-block">
-              <p>Accent color</p>
-
-              <div className="theme-grid">
-                <button
-                  type="button"
-                  className={
-                    theme === "purple"
-                      ? "theme-selected"
-                      : ""
-                  }
-                  onClick={() =>
-                    changeTheme(
-                      "purple"
-                    )
-                  }
-                >
-                  🟣 Purple
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    theme === "red"
-                      ? "theme-selected"
-                      : ""
-                  }
-                  onClick={() =>
-                    changeTheme("red")
-                  }
-                >
-                  🔴 Red
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    theme === "yellow"
-                      ? "theme-selected"
-                      : ""
-                  }
-                  onClick={() =>
-                    changeTheme(
-                      "yellow"
-                    )
-                  }
-                >
-                  🟡 Yellow
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    theme === "orange"
-                      ? "theme-selected"
-                      : ""
-                  }
-                  onClick={() =>
-                    changeTheme(
-                      "orange"
-                    )
-                  }
-                >
-                  🟠 Orange
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    theme === "green"
-                      ? "theme-selected"
-                      : ""
-                  }
-                  onClick={() =>
-                    changeTheme(
-                      "green"
-                    )
-                  }
-                >
-                  🟢 Green
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    theme === "blue"
-                      ? "theme-selected"
-                      : ""
-                  }
-                  onClick={() =>
-                    changeTheme("blue")
-                  }
-                >
-                  🔵 Blue
-                </button>
-              </div>
-
-              {themeError && (
-                <p className="sidebar-error">
-                  {themeError}
-                </p>
-              )}
-            </div>
-
-            <div className="settings-block">
-              <p>Appearance</p>
-
-              <div className="appearance-buttons">
-                <button
-                  type="button"
-                  className={
-                    !darkMode
-                      ? "theme-selected"
-                      : ""
-                  }
-                  onClick={() =>
-                    changeDarkMode(false)
-                  }
-                >
-                  ☀️ Light
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    darkMode
-                      ? "theme-selected"
-                      : ""
-                  }
-                  onClick={() =>
-                    changeDarkMode(true)
-                  }
-                >
-                  🌙 Dark
-                </button>
-              </div>
-            </div>
-          </div>
-        </SidebarSection>
-
-        {/* =====================================================
-            ADD CONTACT
-            ===================================================== */}
-
-        <SidebarSection
-          icon="➕"
-          title="Add a contact"
-          open={addContactOpen}
-          onToggle={() =>
-            setAddContactOpen(
-              (current) => !current
-            )
-          }
-        >
-          <input
-            type="text"
-            placeholder="Search username..."
-            value={contactSearch}
-            onChange={(event) => {
-              setContactSearch(
-                event.target.value
-              );
-              setContactError("");
-              setSearchResult(null);
-            }}
-          />
-
-          <button
-            type="button"
-            className="sidebar-primary-button"
-            onClick={searchForContact}
-          >
-            Search
-          </button>
-
-          {contactError && (
-            <p className="sidebar-error">
-              {contactError}
-            </p>
-          )}
-
-          {searchResult && (
-            <div className="search-result">
-              <div className="search-result-user">
-                <div className="avatar small">
-                  {searchResult.username
-                    .charAt(0)
-                    .toUpperCase()}
-                </div>
-
-                <strong>
-                  {searchResult.username}
-                </strong>
-              </div>
-
-              <button
-                type="button"
-                onClick={addContact}
-              >
-                Add
-              </button>
-            </div>
-          )}
-        </SidebarSection>
-
-        {/* =====================================================
             CONTACTS
             ===================================================== */}
 
@@ -2136,7 +1871,7 @@ function Chat({ user }) {
           )}
         </SidebarSection>
 
-        {/* =====================================================
+{/* =====================================================
             GROUPS
             ===================================================== */}
 
@@ -2288,7 +2023,7 @@ function Chat({ user }) {
           )}
         </SidebarSection>
 
-        {/* =====================================================
+{/* =====================================================
             SELECTED GROUP
             ===================================================== */}
 
@@ -2617,6 +2352,271 @@ function Chat({ user }) {
             </div>
           </SidebarSection>
         )}
+
+{/* =====================================================
+            SETTINGS
+            ===================================================== */}
+
+        <SidebarSection
+          icon="⚙️"
+          title="Settings"
+          open={settingsOpen}
+          onToggle={() =>
+            setSettingsOpen(
+              (current) => !current
+            )
+          }
+        >
+          <div className="settings">
+            <div className="settings-block">
+              <p>Accent color</p>
+
+              <div className="theme-grid">
+                <button
+                  type="button"
+                  className={
+                    theme === "purple"
+                      ? "theme-selected"
+                      : ""
+                  }
+                  onClick={() =>
+                    changeTheme(
+                      "purple"
+                    )
+                  }
+                >
+                  🟣 Purple
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    theme === "red"
+                      ? "theme-selected"
+                      : ""
+                  }
+                  onClick={() =>
+                    changeTheme("red")
+                  }
+                >
+                  🔴 Red
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    theme === "yellow"
+                      ? "theme-selected"
+                      : ""
+                  }
+                  onClick={() =>
+                    changeTheme(
+                      "yellow"
+                    )
+                  }
+                >
+                  🟡 Yellow
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    theme === "orange"
+                      ? "theme-selected"
+                      : ""
+                  }
+                  onClick={() =>
+                    changeTheme(
+                      "orange"
+                    )
+                  }
+                >
+                  🟠 Orange
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    theme === "green"
+                      ? "theme-selected"
+                      : ""
+                  }
+                  onClick={() =>
+                    changeTheme(
+                      "green"
+                    )
+                  }
+                >
+                  🟢 Green
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    theme === "blue"
+                      ? "theme-selected"
+                      : ""
+                  }
+                  onClick={() =>
+                    changeTheme("blue")
+                  }
+                >
+                  🔵 Blue
+                </button>
+              </div>
+
+              {themeError && (
+                <p className="sidebar-error">
+                  {themeError}
+                </p>
+              )}
+            </div>
+
+            <div className="settings-block">
+              <p>Appearance</p>
+
+              <div className="appearance-buttons">
+                <button
+                  type="button"
+                  className={
+                    !darkMode
+                      ? "theme-selected"
+                      : ""
+                  }
+                  onClick={() =>
+                    changeDarkMode(false)
+                  }
+                >
+                  ☀️ Light
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    darkMode
+                      ? "theme-selected"
+                      : ""
+                  }
+                  onClick={() =>
+                    changeDarkMode(true)
+                  }
+                >
+                  🌙 Dark
+                </button>
+              </div>
+            </div>
+          </div>
+        </SidebarSection>
+
+        {/* =====================================================
+            ADD CONTACT
+            ===================================================== */}
+
+        <SidebarSection
+          icon="➕"
+          title="Add a contact"
+          open={addContactOpen}
+          onToggle={() =>
+            setAddContactOpen(
+              (current) => !current
+            )
+          }
+        >
+          <input
+            type="text"
+            placeholder="Search username..."
+            value={contactSearch}
+            onChange={(event) => {
+              setContactSearch(
+                event.target.value
+              );
+              setContactError("");
+              setSearchResult(null);
+            }}
+          />
+
+          <button
+            type="button"
+            className="sidebar-primary-button"
+            onClick={searchForContact}
+          >
+            Search
+          </button>
+
+          {contactError && (
+            <p className="sidebar-error">
+              {contactError}
+            </p>
+          )}
+
+          {searchResult && (
+            <div className="search-result">
+              <div className="search-result-user">
+                <div className="avatar small">
+                  {searchResult.username
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+
+                <strong>
+                  {searchResult.username}
+                </strong>
+              </div>
+
+              <button
+                type="button"
+                onClick={addContact}
+              >
+                Add
+              </button>
+            </div>
+          )}
+        </SidebarSection>
+
+        {/* =====================================================
+            USERNAME
+            ===================================================== */}
+
+        <SidebarSection
+          icon="✏️"
+          title="Username"
+          open={usernameEditorOpen}
+          onToggle={() => {
+            setUsernameEditorOpen(
+              (current) => !current
+            );
+            setUsernameError("");
+            setNewUsername(username);
+          }}
+        >
+          <input
+            type="text"
+            placeholder="New username"
+            value={newUsername}
+            onChange={(event) => {
+              setNewUsername(
+                event.target.value
+              );
+              setUsernameError("");
+            }}
+            minLength={3}
+            maxLength={20}
+          />
+
+          <button
+            type="button"
+            className="sidebar-primary-button"
+            onClick={changeUsername}
+          >
+            Save username
+          </button>
+
+          {usernameError && (
+            <p className="sidebar-error">
+              {usernameError}
+            </p>
+          )}
+        </SidebarSection>
 
         <button
           type="button"

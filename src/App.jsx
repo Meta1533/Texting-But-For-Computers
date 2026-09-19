@@ -255,6 +255,19 @@ function handleTyping() {
     });
   }, 1500);
 }
+function stopTyping() {
+  clearTimeout(typingTimeoutRef.current);
+
+  setIsTyping(false);
+
+  typingChannelRef.current?.send({
+    type: "broadcast",
+    event: "stopped_typing",
+    payload: {
+      userId: user.id,
+    },
+  });
+}
 useEffect(() => {
   return () => {
     clearTimeout(typingTimeoutRef.current);
@@ -625,7 +638,7 @@ useEffect(() => {
     behavior: "instant",
     block: "end",
   });
-}, [messages]);
+}, [messages, otherUserTyping]);
 
 
 
@@ -1148,7 +1161,9 @@ useEffect(() => {
     };
   }, [user.id]);
 
-  async function sendMessage() {
+ async function sendMessage() {
+  stopTyping();
+
     if (message.trim() === "") return;
 
     const trimmedMessage = message.trim();
@@ -2791,38 +2806,37 @@ useEffect(() => {
         </header>
 
         <section className="messages">
-          {otherUserTyping && selectedContact && (
-  <div className="typing-indicator">
-    {selectedContact.username} is typing . . .
-  </div>
-)}
-          {messages.map((msg, index) => (
-            <div
-              key={msg.id || index}
-              className={`message-wrapper ${
-                msg.sent
-                  ? "sent"
-                  : "received"
-              }`}
-            >
-              {selectedGroup && (
-                <div className="message-sender">
-                  {msg.username}
-                </div>
-              )}
+  {messages.map((msg, index) => (
+    <div
+      key={msg.id || index}
+      className={`message-wrapper ${
+        msg.sent ? "sent" : "received"
+      }`}
+    >
+      {selectedGroup && (
+        <div className="message-sender">
+          {msg.username}
+        </div>
+      )}
 
-              <div className="message">
-  {msg.text}
-</div>
+      <div className="message">
+        {msg.text}
+      </div>
 
-<div className="message-time">
-  {formatMessageTime(msg.createdAt)}
-</div>
-            </div>
-          ))}
+      <div className="message-time">
+        {formatMessageTime(msg.createdAt)}
+      </div>
+    </div>
+  ))}
 
-          <div ref={messagesEndRef} />
-        </section>
+  {otherUserTyping && selectedContact && (
+    <div className="typing-indicator">
+      {selectedContact.username} is typing . . .
+    </div>
+  )}
+
+  <div ref={messagesEndRef} />
+</section>
 
         <div className="message-box">
           <input
@@ -2835,20 +2849,8 @@ useEffect(() => {
   }}
   onKeyDown={(event) => {
     if (event.key === "Enter") {
-      clearTimeout(typingTimeoutRef.current);
-
-      setIsTyping(false);
-
-      typingChannelRef.current?.send({
-        type: "broadcast",
-        event: "stopped_typing",
-        payload: {
-          userId: user.id,
-        },
-      });
-
-      sendMessage();
-    }
+  sendMessage();
+}
   }}
 />
 

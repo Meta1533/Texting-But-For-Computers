@@ -180,7 +180,10 @@ function Chat({ user }) {
   const presenceReadyRef = useRef(false);
   const selectedContactRef = useRef(null);
   const selectedGroupRef = useRef(null);
-
+  const [isTyping, setIsTyping] = useState(false);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
+  const typingChannelRef = useRef(null);
 
   const [userStatus, setUserStatus] = useState("online");
 
@@ -219,6 +222,44 @@ function Chat({ user }) {
     selectedGroupRef.current = selectedGroup;
   }, [selectedContact, selectedGroup]);
 
+function handleTyping() {
+  const channel = typingChannelRef.current;
+
+  if (!channel || !selectedContact || selectedGroup) {
+    return;
+  }
+
+  if (!isTyping) {
+    setIsTyping(true);
+
+    channel.send({
+      type: "broadcast",
+      event: "typing",
+      payload: {
+        userId: user.id,
+      },
+    });
+  }
+
+  clearTimeout(typingTimeoutRef.current);
+
+  typingTimeoutRef.current = setTimeout(() => {
+    setIsTyping(false);
+
+    channel.send({
+      type: "broadcast",
+      event: "stopped_typing",
+      payload: {
+        userId: user.id,
+      },
+    });
+  }, 1500);
+}
+useEffect(() => {
+  return () => {
+    clearTimeout(typingTimeoutRef.current);
+  };
+}, []);
 function formatMessageTime(dateString) {
   if (!dateString) return "";
 
@@ -227,7 +268,40 @@ function formatMessageTime(dateString) {
     minute: "2-digit",
   });
 }
-  
+useEffect(() => {
+  if (!selectedContact || selectedGroup) {
+    return;
+  }
+
+  const channelName = `typing-${[user.id, selectedContact.id]
+    .sort()
+    .join("-")}`;
+
+  const channel = supabase.channel(channelName);
+
+  typingChannelRef.current = channel;
+
+  channel
+    .on("broadcast", { event: "typing" }, (payload) => {
+      if (payload.payload?.userId === selectedContact.id) {
+        setOtherUserTyping(true);
+      }
+    })
+    .on("broadcast", { event: "stopped_typing" }, (payload) => {
+      if (payload.payload?.userId === selectedContact.id) {
+        setOtherUserTyping(false);
+      }
+    })
+    .subscribe((status) => {
+      console.log("Typing channel status:", status);
+    });
+
+  return () => {
+    typingChannelRef.current = null;
+    setOtherUserTyping(false);
+    supabase.removeChannel(channel);
+  };
+}, [selectedContact, selectedGroup, user.id]);
   useEffect(() => {
     async function loadProfile() {
       const { data, error } = await supabase
@@ -2717,6 +2791,11 @@ function formatMessageTime(dateString) {
         </header>
 
         <section className="messages">
+          {otherUserTyping && selectedContact && (
+  <div className="typing-indicator">
+    {selectedContact.username} is typing . . .
+  </div>
+)}
           {messages.map((msg, index) => (
             <div
               key={msg.id || index}
@@ -2747,20 +2826,31 @@ function formatMessageTime(dateString) {
 
         <div className="message-box">
           <input
-            type="text"
-            placeholder="Type a message..."
-            value={message}
-            onChange={(event) =>
-              setMessage(
-                event.target.value
-              )
-            }
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                sendMessage();
-              }
-            }}
-          />
+  type="text"
+  placeholder="Type a message..."
+  value={message}
+  onChange={(event) => {
+    setMessage(event.target.value);
+    handleTyping();
+  }}
+  onKeyDown={(event) => {
+    if (event.key === "Enter") {
+      clearTimeout(typingTimeoutRef.current);
+
+      setIsTyping(false);
+
+      typingChannelRef.current?.send({
+        type: "broadcast",
+        event: "stopped_typing",
+        payload: {
+          userId: user.id,
+        },
+      });
+
+      sendMessage();
+    }
+  }}
+/>
 
           <button onClick={sendMessage}>
             Send

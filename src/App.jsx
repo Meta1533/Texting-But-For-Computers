@@ -219,6 +219,15 @@ function Chat({ user }) {
     selectedGroupRef.current = selectedGroup;
   }, [selectedContact, selectedGroup]);
 
+function formatMessageTime(dateString) {
+  if (!dateString) return "";
+
+  return new Date(dateString).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+  
   useEffect(() => {
     async function loadProfile() {
       const { data, error } = await supabase
@@ -2724,8 +2733,12 @@ function Chat({ user }) {
               )}
 
               <div className="message">
-                {msg.text}
-              </div>
+  {msg.text}
+</div>
+
+<div className="message-time">
+  {formatMessageTime(msg.createdAt)}
+</div>
             </div>
           ))}
 

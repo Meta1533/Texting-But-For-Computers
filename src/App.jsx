@@ -68,7 +68,29 @@ const USER_STATUSES = {
 function App() {
   const [session, setSession] = useState(null);
 
-  // ...your existing App code...
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  if (!session) {
+    return <Auth />;
+  }
+
+  return <Chat user={session.user} />;
 }
 
 function SidebarSection({
@@ -1242,7 +1264,7 @@ function Chat({ user }) {
 
     setUsername(trimmedUsername);
     setNewUsername("");
-    setShowUsernameEditor(false);
+    setUsernameEditorOpen(false);
   }
 
   async function changeTheme(newTheme) {
@@ -2576,7 +2598,7 @@ function Chat({ user }) {
           }}
         >
           <input
-  ref={usernameInputRef}
+
   type="text"
   placeholder="New username"
   value={newUsername}

@@ -1306,17 +1306,13 @@ button {
 .messages {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 9px;
-
   flex: 1;
   min-height: 0;
-
   width: 100%;
-
-  padding: 22px 28px;
-
+  padding: 22px 28px 80px;
   overflow-y: auto;
-
   background: #f9fafb;
 }
 

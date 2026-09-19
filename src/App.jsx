@@ -68,25 +68,48 @@ const USER_STATUSES = {
 function App() {
   const [session, setSession] = useState(null);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
+  // ...your existing App code...
+}
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+function SidebarSection({
+  icon,
+  title,
+  open,
+  onToggle,
+  children,
+}) {
+  return (
+    <section
+      className={`sidebar-section ${
+        open ? "open" : "collapsed"
+      }`}
+    >
+      <button
+        type="button"
+        className="sidebar-section-header"
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <span className="sidebar-section-title">
+          <span className="sidebar-section-icon">
+            {icon}
+          </span>
 
-    return () => subscription.unsubscribe();
-  }, []);
+          <span>{title}</span>
+        </span>
 
-  if (!session) {
-    return <Auth onLogin={() => {}} />;
-  }
+        <span className="sidebar-section-arrow">
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
 
-  return <Chat user={session.user} />;
+      {open && (
+        <div className="sidebar-section-content">
+          {children}
+        </div>
+      )}
+    </section>
+  );
 }
 
 function Chat({ user }) {
@@ -136,48 +159,10 @@ function Chat({ user }) {
   const selectedContactRef = useRef(null);
   const selectedGroupRef = useRef(null);
 
+
   const [userStatus, setUserStatus] = useState("online");
 
-  function SidebarSection({
-    icon,
-    title,
-    open,
-    onToggle,
-    children,
-  }) {
-    return (
-      <section
-        className={`sidebar-section ${
-          open ? "open" : "collapsed"
-        }`}
-      >
-        <button
-          type="button"
-          className="sidebar-section-header"
-          onClick={onToggle}
-          aria-expanded={open}
-        >
-          <span className="sidebar-section-title">
-            <span className="sidebar-section-icon">
-              {icon}
-            </span>
 
-            <span>{title}</span>
-          </span>
-
-          <span className="sidebar-section-arrow">
-            {open ? "▲" : "▼"}
-          </span>
-        </button>
-
-        {open && (
-          <div className="sidebar-section-content">
-            {children}
-          </div>
-        )}
-      </section>
-    );
-  }
 
   const [presenceUsers, setPresenceUsers] = useState({});
   const [showStatusPicker, setShowStatusPicker] =
@@ -2523,9 +2508,10 @@ function Chat({ user }) {
           }
         >
           <input
-            type="text"
-            placeholder="Search username..."
-            value={contactSearch}
+        
+        type="text"
+        placeholder="Search username..."
+        value={contactSearch}
             onChange={(event) => {
               setContactSearch(
                 event.target.value
@@ -2590,9 +2576,10 @@ function Chat({ user }) {
           }}
         >
           <input
-            type="text"
-            placeholder="New username"
-            value={newUsername}
+  ref={usernameInputRef}
+  type="text"
+  placeholder="New username"
+  value={newUsername}
             onChange={(event) => {
               setNewUsername(
                 event.target.value

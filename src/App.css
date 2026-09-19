@@ -1858,7 +1858,7 @@ button {
   }
 }
 .typing-indicator {
-  align-self: flex-start;
+  align-self: center;
   margin: 2px 0 3px;
   padding: 0 8px;
   color: #9ca3af;

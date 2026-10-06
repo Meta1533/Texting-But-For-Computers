@@ -148,8 +148,12 @@ function Chat({ user }) {
       "c0c4ee29-9e7b-4a5f-a1b5-492e8e36114f",
     ],
 
-    designer: [
-      "USER_UUID_4",
+    dirtbiker: [
+      "a4838b24-b148-498e-911c-9fca7407937c",
+    ],
+
+    dinosaur: [
+      "3f1e7bce-bcde-42fc-a943-1fe12abc5a92",
     ],
   };
 
@@ -2866,6 +2870,16 @@ useEffect(() => {
 export default App;
 
 const USER_TAGS = {
+  dinosaur: {
+    label: "Dinosaur",
+    emoji: "🦖",
+  }, 
+ 
+  dirtbiker: {
+    label: "Dirtbiker",
+    emoji: "🏍️",
+  },
+
   admin: {
     label: "Admin",
     emoji: "👑",

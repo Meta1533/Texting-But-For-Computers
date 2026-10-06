@@ -36,6 +36,7 @@ const BANNED_WORDS = [
   "jesus",
   "sin",
   "prick",
+  "gay",
 ];
 
 const USER_STATUSES = {
@@ -155,6 +156,10 @@ function Chat({ user }) {
     dinosaur: [
       "3f1e7bce-bcde-42fc-a943-1fe12abc5a92",
     ],
+
+    link: [
+      "cb0ff49d-c90a-4139-83c7-aae4ae9446dd",
+    ],
   };
 
   const [message, setMessage] = useState("");
@@ -178,6 +183,10 @@ function Chat({ user }) {
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [memberError, setMemberError] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
+  const totalUnreadMessages = Object.values(unreadCounts).reduce(
+  (total, count) => total + count,
+  0
+);
   const [groupUnreadCounts, setGroupUnreadCounts] = useState({});
   const messagesEndRef = useRef(null);
   const presenceChannelRef = useRef(null);
@@ -1819,10 +1828,10 @@ useEffect(() => {
         <SidebarSection
           icon="👥"
           title={`Your contacts${
-            contacts.length
-              ? ` (${contacts.length})`
-              : ""
-          }`}
+  totalUnreadMessages > 0
+    ? ` (${totalUnreadMessages})`
+    : ""
+}`}
           open={contactsOpen}
           onToggle={() =>
             setContactsOpen(
@@ -2870,6 +2879,11 @@ useEffect(() => {
 export default App;
 
 const USER_TAGS = {
+   link: {
+    label: "Link",
+    emoji: "⚔️",
+  }, 
+  
   dinosaur: {
     label: "Dinosaur",
     emoji: "🦖",

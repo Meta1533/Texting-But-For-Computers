@@ -191,6 +191,11 @@ function Chat({ user }) {
   0
 );
   const [groupUnreadCounts, setGroupUnreadCounts] = useState({});
+  const totalUnreadGroupMessages =
+  Object.values(groupUnreadCounts).reduce(
+    (total, count) => total + count,
+    0
+  );
   const messagesEndRef = useRef(null);
   const presenceChannelRef = useRef(null);
   const presenceReadyRef = useRef(false);
@@ -1013,103 +1018,108 @@ useEffect(() => {
   }, [selectedContact, selectedGroup, user.id]);
 
   useEffect(() => {
-    if (!selectedGroup) {
-      return;
-    }
+  const channel = supabase
+    .channel(`all-group-messages-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "group_messages",
+      },
+      async (payload) => {
+        const msg = payload.new;
 
-    const channel = supabase
-      .channel(
-        `group-messages-${selectedGroup.id}`
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "group_messages",
-          filter: `group_id=eq.${selectedGroup.id}`,
-        },
-        async (payload) => {
-          const msg = payload.new;
-
-          console.log(
-            "Group realtime message:",
-            msg
-          );
-
-          if (msg.user_id !== user.id) {
-            if (
-              selectedGroupRef.current?.id !==
-              msg.group_id
-            ) {
-              setGroupUnreadCounts((current) => ({
-                ...current,
-                [msg.group_id]:
-                  (current[msg.group_id] || 0) + 1,
-              }));
-            }
-          }
-
-          const {
-            data: profile,
-            error,
-          } = await supabase
-            .from("profiles")
-            .select("id, username")
-            .eq("id", msg.user_id)
-            .single();
-
-          if (error) {
-            console.error(
-              "Error loading realtime message profile:",
-              error
-            );
-          }
-
-          setMessages((currentMessages) => {
-            if (
-              currentMessages.some(
-                (existing) =>
-                  existing.id === msg.id
-              )
-            ) {
-              return currentMessages;
-            }
-
-            return [
-              ...currentMessages,
-              {
-                id: msg.id,
-                text: msg.content,
-                sent: msg.user_id === user.id,
-                userId: msg.user_id,
-                username:
-                  profile?.username ||
-                  "Unknown user",
-                createdAt: msg.created_at,
-              },
-            ];
-          });
-        }
-      )
-      .subscribe((status, error) => {
         console.log(
-          "Group realtime status:",
-          status
+          "Group realtime message:",
+          msg
         );
+
+        // Ignore our own messages for unread counts.
+        if (msg.user_id !== user.id) {
+          // If this group is NOT currently open,
+          // increase its unread count.
+          if (
+            selectedGroupRef.current?.id !==
+            msg.group_id
+          ) {
+            setGroupUnreadCounts((current) => ({
+              ...current,
+              [msg.group_id]:
+                (current[msg.group_id] || 0) + 1,
+            }));
+          }
+        }
+
+        // Only add the message to the visible chat
+        // if this is the group currently open.
+        if (
+          selectedGroupRef.current?.id !==
+          msg.group_id
+        ) {
+          return;
+        }
+
+        const {
+          data: profile,
+          error,
+        } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .eq("id", msg.user_id)
+          .single();
 
         if (error) {
           console.error(
-            "Group realtime error:",
+            "Error loading realtime message profile:",
             error
           );
         }
-      });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [selectedGroup, user.id]);
+        setMessages((currentMessages) => {
+          if (
+            currentMessages.some(
+              (existing) =>
+                existing.id === msg.id
+            )
+          ) {
+            return currentMessages;
+          }
+
+          return [
+            ...currentMessages,
+            {
+              id: msg.id,
+              text: msg.content,
+              sent: msg.user_id === user.id,
+              userId: msg.user_id,
+              username:
+                profile?.username ||
+                "Unknown user",
+              createdAt: msg.created_at,
+            },
+          ];
+        });
+      }
+    )
+    .subscribe((status, error) => {
+      console.log(
+        "All group realtime status:",
+        status
+      );
+
+      if (error) {
+        console.error(
+          "Group realtime error:",
+          error
+        );
+      }
+    });
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [user.id]);
 
   useEffect(() => {
     const channel = supabase
@@ -2010,10 +2020,10 @@ useEffect(() => {
         <SidebarSection
           icon="👨‍👩‍👧"
           title={`Group chats${
-            groups.length
-              ? ` (${groups.length})`
-              : ""
-          }`}
+  totalUnreadGroupMessages > 0
+    ? ` (${totalUnreadGroupMessages})`
+    : ""
+}`}
           open={groupsOpen}
           onToggle={() =>
             setGroupsOpen(
@@ -2080,7 +2090,18 @@ useEffect(() => {
               No groups yet.
             </p>
           ) : (
-            groups.map((group) => {
+            groups
+  .slice()
+  .sort((a, b) => {
+    const unreadA =
+      groupUnreadCounts[a.id] || 0;
+
+    const unreadB =
+      groupUnreadCounts[b.id] || 0;
+
+    return unreadB - unreadA;
+  })
+  .map((group) => {
               const isSelected =
                 selectedGroup?.id ===
                 group.id;

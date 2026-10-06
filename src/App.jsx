@@ -183,8 +183,11 @@ function Chat({ user }) {
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [memberError, setMemberError] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
-  const totalUnreadMessages = Object.values(unreadCounts).reduce(
-  (total, count) => total + count,
+  const totalUnreadMessages = contacts.reduce(
+  (total, contact) => {
+    const contactId = contact.contact_id;
+    return total + (unreadCounts[contactId] || 0);
+  },
   0
 );
   const [groupUnreadCounts, setGroupUnreadCounts] = useState({});

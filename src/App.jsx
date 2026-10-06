@@ -1847,7 +1847,18 @@ useEffect(() => {
               No contacts yet.
             </p>
           ) : (
-            contacts.map((contact) => {
+            contacts
+  .slice()
+  .sort((a, b) => {
+    const unreadA =
+      unreadCounts[a.profiles.id] || 0;
+
+    const unreadB =
+      unreadCounts[b.profiles.id] || 0;
+
+    return unreadB - unreadA;
+  })
+  .map((contact) => {
               const contactId =
                 contact.profiles.id;
 

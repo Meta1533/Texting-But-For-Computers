@@ -1846,11 +1846,23 @@ useEffect(() => {
     : ""
 }`}
           open={contactsOpen}
-          onToggle={() =>
-            setContactsOpen(
-              (current) => !current
-            )
-          }
+          
+onToggle={() => {
+  const isClosing = contactsOpen;
+
+  // Open or close the contacts section.
+  setContactsOpen((current) => !current);
+
+  // Only close the conversation when collapsing contacts.
+  if (isClosing) {
+    stopTyping();
+    setSelectedContact(null);
+    setSelectedGroup(null);
+    setMessages([]);
+    setMessage("");
+    setOtherUserTyping(false);
+  }
+}}
         >
           {contacts.length === 0 ? (
             <p className="empty-sidebar-message">

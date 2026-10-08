@@ -1466,8 +1466,7 @@ async function renameContact(contactRowId) {
     .update({ nickname: trimmedName })
     .eq("id", contactRowId)
     .eq("user_id", user.id)
-    .select("id, nickname")
-    .single();
+    .select("id, nickname");
 
   if (error) {
     console.error("Error renaming contact:", error);
@@ -1475,10 +1474,26 @@ async function renameContact(contactRowId) {
     return;
   }
 
+  // The update must affect exactly one contact.
+  if (!data || data.length !== 1) {
+    console.error("Unexpected rename result:", {
+      contactRowId,
+      userId: user.id,
+      returnedRows: data,
+    });
+
+    alert(
+      "No contact was updated. Check your contact ID and Supabase permissions."
+    );
+    return;
+  }
+
+  const updatedContact = data[0];
+
   setContacts((currentContacts) =>
     currentContacts.map((contact) =>
       contact.id === contactRowId
-        ? { ...contact, nickname: data.nickname }
+        ? { ...contact, nickname: updatedContact.nickname }
         : contact
     )
   );

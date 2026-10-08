@@ -174,6 +174,8 @@ function Chat({ user }) {
   const [contacts, setContacts] = useState([]);
   const [searchResult, setSearchResult] = useState(null);
   const [contactError, setContactError] = useState("");
+  const [editingContactId, setEditingContactId] = useState(null);
+  const [editingContactName, setEditingContactName] = useState("");
   const [selectedContact, setSelectedContact] = useState(null);
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -635,7 +637,7 @@ useEffect(() => {
       const { data, error } = await supabase
         .from("contacts")
         .select(
-          "id, contact_id, profiles:contact_id(id, username)"
+          "id, contact_id, nickname, profiles:contact_id(id, username)"
         )
         .eq("user_id", user.id);
 
@@ -1446,6 +1448,44 @@ useEffect(() => {
     setDarkMode(data.dark_mode);
   }
 
+async function renameContact(contactRowId) {
+  const trimmedName = editingContactName.trim();
+
+  if (!trimmedName) {
+    alert("Enter a contact name.");
+    return;
+  }
+
+  if (trimmedName.length > 30) {
+    alert("Contact name must be 30 characters or less.");
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("contacts")
+    .update({ nickname: trimmedName })
+    .eq("id", contactRowId)
+    .eq("user_id", user.id)
+    .select("id, nickname")
+    .single();
+
+  if (error) {
+    console.error("Error renaming contact:", error);
+    alert("Could not rename contact: " + error.message);
+    return;
+  }
+
+  setContacts((currentContacts) =>
+    currentContacts.map((contact) =>
+      contact.id === contactRowId
+        ? { ...contact, nickname: data.nickname }
+        : contact
+    )
+  );
+
+  setEditingContactId(null);
+  setEditingContactName("");
+}
   async function addContact() {
     if (!searchResult) return;
 
@@ -1954,20 +1994,74 @@ onToggle={() => {
                   }}
                 >
                   <div className="avatar">
-                    {contact.profiles.username
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
+  {(contact.nickname?.trim() ||
+    contact.profiles.username)
+    .charAt(0)
+    .toUpperCase()}
+</div>
 
                   <div className="contact-details">
                     <div className="contact-name-row">
-                      <strong>
-                        {
-                          contact
-                            .profiles
-                            .username
-                        }
-                      </strong>
+                      
+{editingContactId === contact.id ? (
+  <form
+    className="rename-contact-form"
+    onSubmit={(event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      renameContact(contact.id);
+    }}
+    onClick={(event) => event.stopPropagation()}
+  >
+    <input
+      type="text"
+      value={editingContactName}
+      onChange={(event) =>
+        setEditingContactName(event.target.value)
+      }
+      maxLength={30}
+      autoFocus
+      aria-label="New contact name"
+    />
+
+    <button type="submit">
+      Save
+    </button>
+
+    <button
+      type="button"
+      onClick={() => {
+        setEditingContactId(null);
+        setEditingContactName("");
+      }}
+    >
+      Cancel
+    </button>
+  </form>
+) : (
+  <>
+    <strong>
+      {contact.nickname?.trim() ||
+        contact.profiles.username}
+    </strong>
+
+    <button
+      type="button"
+      className="rename-contact-button"
+      aria-label="Rename contact"
+      title="Rename contact"
+      onClick={(event) => {
+        event.stopPropagation();
+        setEditingContactId(contact.id);
+        setEditingContactName(
+          contact.nickname || contact.profiles.username
+        );
+      }}
+    >
+      ✎
+    </button>
+  </>
+)}
 
                       {unreadCounts[
                         contactId

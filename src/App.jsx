@@ -793,32 +793,52 @@ useEffect(() => {
   }, [user.id]);
 
   useEffect(() => {
-    async function loadGroups() {
-      const { data, error } = await supabase
-        .from("groups")
-        .select(
-          `
-        id,
-        name,
-        created_by,
-        created_at
-      `
-        )
-        .order("created_at", {
-          ascending: true,
-        });
 
-      if (error) {
-        console.error(
-          "Error loading groups:",
-          error
-        );
-        return;
-      }
+useEffect(() => {
+  async function loadGroups() {
+    const { data: memberships, error: membershipError } =
+      await supabase
+        .from("group_members")
+        .select("group_id")
+        .eq("user_id", user.id);
 
-      setGroups(data || []);
-      console.log("My groups:", data);
+    if (membershipError) {
+      console.error(
+        "Error loading memberships:",
+        membershipError
+      );
+      return;
     }
+
+    const groupIds = (memberships || []).map(
+      (membership) => membership.group_id
+    );
+
+    if (groupIds.length === 0) {
+      setGroups([]);
+      setSelectedGroup(null);
+      setGroupMembers([]);
+      setMessages([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("groups")
+      .select("id, name, created_by, created_at")
+      .in("id", groupIds)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error loading groups:", error);
+      return;
+    }
+
+    setGroups(data || []);
+  }
+
+  loadGroups();
+}, [user.id]);
+
 
     loadGroups();
   }, [user.id]);
@@ -1722,6 +1742,64 @@ async function renameContact(contactRowId) {
 
     console.log("Group created:", group);
   }
+
+
+async function kickGroupMember(member) {
+  if (!selectedGroup) return;
+
+  // Only the creator can kick members.
+  if (selectedGroup.created_by !== user.id) {
+    alert("Only the group creator can kick members.");
+    return;
+  }
+
+  // The creator cannot kick themselves.
+  if (member.user_id === selectedGroup.created_by) {
+    alert("You cannot kick yourself from your own group.");
+    return;
+  }
+
+  const memberName =
+    member.profile?.username || "this member";
+
+  const confirmed = window.confirm(
+    `Are you sure you want to kick ${memberName} from "${selectedGroup.name}"?`
+  );
+
+  if (!confirmed) return;
+
+  const { data, error } = await supabase
+    .from("group_members")
+    .delete()
+    .eq("id", member.id)
+    .eq("group_id", selectedGroup.id)
+    .select("id");
+
+  if (error) {
+    console.error("Error kicking group member:", error);
+    alert("Could not kick member: " + error.message);
+    return;
+  }
+
+  // Check that a membership was actually deleted.
+  if (!data || data.length === 0) {
+    alert(
+      "The member was not removed. Check your Supabase permissions."
+    );
+    return;
+  }
+
+  // Immediately update the displayed member list.
+  setGroupMembers((currentMembers) =>
+    currentMembers.filter(
+      (currentMember) => currentMember.id !== member.id
+    )
+  );
+
+  setMemberError("");
+  alert(`${memberName} was removed from the group.`);
+}
+
 
   async function logOut() {
     await supabase.auth.signOut();
@@ -2651,29 +2729,46 @@ onToggle={() => {
               </p>
             )}
 
-            <div className="member-list">
-              {groupMembers.map(
-                (member) => (
-                  <div
-                    key={member.id}
-                    className="contact-item"
-                  >
-                    <div className="avatar">
-                      {member.profile?.username
-                        ?.charAt(0)
-                        .toUpperCase() ||
-                        "?"}
-                    </div>
+            
+<div className="member-list">
+  {groupMembers.map((member) => {
+    const isCreator =
+      member.user_id === selectedGroup.created_by;
 
-                    <strong>
-                      {member.profile
-                        ?.username ||
-                        "Unknown user"}
-                    </strong>
-                  </div>
-                )
-              )}
-            </div>
+    const canKick =
+      selectedGroup.created_by === user.id &&
+      !isCreator;
+
+    return (
+      <div
+        key={member.id}
+        className="contact-item"
+      >
+        <div className="avatar">
+          {member.profile?.username
+            ?.charAt(0)
+            .toUpperCase() || "?"}
+        </div>
+
+        <strong>
+          {member.profile?.username || "Unknown user"}
+          {isCreator ? " (Creator)" : ""}
+        </strong>
+
+        {canKick && (
+          <button
+            type="button"
+            className="danger-button"
+            onClick={() => kickGroupMember(member)}
+          >
+            Kick
+          </button>
+        )}
+      </div>
+    );
+  })}
+</div>
+
           </SidebarSection>
         )}
 

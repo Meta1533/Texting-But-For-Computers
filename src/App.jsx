@@ -792,15 +792,16 @@ useEffect(() => {
     loadUnreadGroupMessages();
   }, [user.id]);
 
-  useEffect(() => {
 
 useEffect(() => {
   async function loadGroups() {
-    const { data: memberships, error: membershipError } =
-      await supabase
-        .from("group_members")
-        .select("group_id")
-        .eq("user_id", user.id);
+    const {
+      data: memberships,
+      error: membershipError,
+    } = await supabase
+      .from("group_members")
+      .select("group_id")
+      .eq("user_id", user.id);
 
     if (membershipError) {
       console.error(
@@ -826,7 +827,9 @@ useEffect(() => {
       .from("groups")
       .select("id, name, created_by, created_at")
       .in("id", groupIds)
-      .order("created_at", { ascending: true });
+      .order("created_at", {
+        ascending: true,
+      });
 
     if (error) {
       console.error("Error loading groups:", error);
@@ -839,9 +842,6 @@ useEffect(() => {
   loadGroups();
 }, [user.id]);
 
-
-    loadGroups();
-  }, [user.id]);
 
   useEffect(() => {
     async function loadGroupMembers() {

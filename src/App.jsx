@@ -305,28 +305,21 @@ useEffect(() => {
   };
 }, []);
 
+
 function formatMessageTime(dateString) {
   if (!dateString) return "";
 
   const messageDate = new Date(dateString);
 
-  // Make sure the date is valid.
   if (Number.isNaN(messageDate.getTime())) {
     return "";
   }
 
-  // Calculate how much time has passed.
-  const secondsAgo = Math.floor(
-  (currentTime - messageDate.getTime()) / 1000
-);
-
-  // Handle messages sent in the future.
-  if (secondsAgo < 0) {
-    return messageDate.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
+  // Prevent small clock differences from showing the wrong time.
+  const secondsAgo = Math.max(
+    0,
+    Math.floor((currentTime - messageDate.getTime()) / 1000)
+  );
 
   const minutesAgo = Math.floor(secondsAgo / 60);
   const hoursAgo = Math.floor(secondsAgo / 3600);
@@ -335,9 +328,7 @@ function formatMessageTime(dateString) {
   const monthsAgo = Math.floor(daysAgo / 30.4375);
   const yearsAgo = Math.floor(daysAgo / 365.25);
 
-  if (secondsAgo < 60) {
-    return "Just now";
-  }
+  if (secondsAgo < 60) return "Just now";
 
   if (minutesAgo < 60) {
     return `${minutesAgo} minute${minutesAgo === 1 ? "" : "s"} ago`;
@@ -361,6 +352,7 @@ function formatMessageTime(dateString) {
 
   return `${yearsAgo} year${yearsAgo === 1 ? "" : "s"} ago`;
 }
+
 
 useEffect(() => {
   if (!selectedContact || selectedGroup) {

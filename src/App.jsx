@@ -161,7 +161,15 @@ function Chat({ user }) {
       "cb0ff49d-c90a-4139-83c7-aae4ae9446dd",
     ],
   };
+const [currentTime, setCurrentTime] = useState(Date.now());
 
+useEffect(() => {
+  const timer = setInterval(() => {
+    setCurrentTime(Date.now());
+  }, 10000); // Update every 10 seconds
+
+  return () => clearInterval(timer);
+}, []);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
@@ -296,14 +304,65 @@ useEffect(() => {
     clearTimeout(typingTimeoutRef.current);
   };
 }, []);
+
 function formatMessageTime(dateString) {
   if (!dateString) return "";
 
-  return new Date(dateString).toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  const messageDate = new Date(dateString);
+const updateTrigger = currentTime;
+  // Make sure the date is valid.
+  if (Number.isNaN(messageDate.getTime())) {
+    return "";
+  }
+
+  // Calculate how much time has passed.
+  const now = new Date();
+  const secondsAgo = Math.floor(
+  (currentTime - messageDate.getTime()) / 1000
+);
+
+  // Handle messages sent in the future.
+  if (secondsAgo < 0) {
+    return messageDate.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  const minutesAgo = Math.floor(secondsAgo / 60);
+  const hoursAgo = Math.floor(secondsAgo / 3600);
+  const daysAgo = Math.floor(secondsAgo / 86400);
+  const weeksAgo = Math.floor(daysAgo / 7);
+  const monthsAgo = Math.floor(daysAgo / 30.4375);
+  const yearsAgo = Math.floor(daysAgo / 365.25);
+
+  if (secondsAgo < 60) {
+    return "Just now";
+  }
+
+  if (minutesAgo < 60) {
+    return `${minutesAgo} minute${minutesAgo === 1 ? "" : "s"} ago`;
+  }
+
+  if (hoursAgo < 24) {
+    return `${hoursAgo} hour${hoursAgo === 1 ? "" : "s"} ago`;
+  }
+
+  if (daysAgo < 7) {
+    return `${daysAgo} day${daysAgo === 1 ? "" : "s"} ago`;
+  }
+
+  if (daysAgo < 30) {
+    return `${weeksAgo} week${weeksAgo === 1 ? "" : "s"} ago`;
+  }
+
+  if (daysAgo < 365) {
+    return `${monthsAgo} month${monthsAgo === 1 ? "" : "s"} ago`;
+  }
+
+  return `${yearsAgo} year${yearsAgo === 1 ? "" : "s"} ago`;
 }
+
 useEffect(() => {
   if (!selectedContact || selectedGroup) {
     return;

@@ -758,6 +758,31 @@ useEffect(() => {
       );
     }
 
+
+  // Listen for real-time contact invite changes
+  useEffect(() => {
+    const channel = supabase
+      .channel(`contact-invites-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "contact_invites",
+        },
+        (payload) => {
+          // Reload the list whenever an invite changes
+          loadContactInvites();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user.id]);
+
+
     loadContactInvites();
   }, [user.id]);
 

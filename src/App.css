@@ -1945,3 +1945,39 @@ button {
 .invite-actions .sidebar-primary-button {
   flex: 1;
 }
+
+/* Contact invitation buttons */
+.invite-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.invite-actions button {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+/* Accept button */
+.invite-actions .sidebar-primary-button {
+  background-color: #6366f1;
+  color: white;
+}
+
+/* Decline button */
+.invite-actions button:not(.sidebar-primary-button) {
+  background-color: #6366f1;
+  color: white;
+}
+
+/* Both buttons */
+.invite-actions button:hover {
+  opacity: 0.8;
+}

@@ -2756,14 +2756,16 @@ onToggle={() => {
         </strong>
 
         {canKick && (
-          <button
-            type="button"
-            className="danger-button"
-            onClick={() => kickGroupMember(member)}
-          >
-            Kick
-          </button>
-        )}
+  <button
+    type="button"
+    className="remove-contact-button"
+    title={`Remove ${member.profile?.username || "member"} from group`}
+    aria-label={`Kick ${member.profile?.username || "member"} from group`}
+    onClick={() => kickGroupMember(member)}
+  >
+    ×
+  </button>
+)}
       </div>
     );
   })}

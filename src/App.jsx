@@ -309,14 +309,13 @@ function formatMessageTime(dateString) {
   if (!dateString) return "";
 
   const messageDate = new Date(dateString);
-const updateTrigger = currentTime;
+
   // Make sure the date is valid.
   if (Number.isNaN(messageDate.getTime())) {
     return "";
   }
 
   // Calculate how much time has passed.
-  const now = new Date();
   const secondsAgo = Math.floor(
   (currentTime - messageDate.getTime()) / 1000
 );

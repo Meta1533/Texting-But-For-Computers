@@ -181,6 +181,9 @@ useEffect(() => {
   const [contactSearch, setContactSearch] = useState("");
   const [contacts, setContacts] = useState([]);
   const [searchResult, setSearchResult] = useState(null);
+  const [contactInvites, setContactInvites] = useState([]);
+const [invitesOpen, setInvitesOpen] = useState(false);
+const [inviteError, setInviteError] = useState("");
   const [contactError, setContactError] = useState("");
   const [editingContactId, setEditingContactId] = useState(null);
   const [editingContactName, setEditingContactName] = useState("");
@@ -705,6 +708,59 @@ useEffect(() => {
 
     loadContacts();
   }, [user.id]);
+
+
+  // Load incoming contact invites
+  useEffect(() => {
+    async function loadContactInvites() {
+      const { data, error } = await supabase
+        .from("contact_invites")
+        .select("id, sender_id, created_at")
+        .eq("receiver_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error loading invites:", error);
+        setInviteError(error.message);
+        return;
+      }
+
+      const invites = data || [];
+
+      if (invites.length === 0) {
+        setContactInvites([]);
+        return;
+      }
+
+      const senderIds = [
+        ...new Set(invites.map((invite) => invite.sender_id)),
+      ];
+
+      const { data: profiles, error: profileError } =
+        await supabase
+          .from("profiles")
+          .select("id, username")
+          .in("id", senderIds);
+
+      if (profileError) {
+        console.error("Error loading invite senders:", profileError);
+        setInviteError(profileError.message);
+        return;
+      }
+
+      setContactInvites(
+        invites.map((invite) => ({
+          ...invite,
+          sender: profiles.find(
+            (profile) => profile.id === invite.sender_id
+          ),
+        }))
+      );
+    }
+
+    loadContactInvites();
+  }, [user.id]);
+
 
   useEffect(() => {
   messagesEndRef.current?.scrollIntoView({
@@ -1571,46 +1627,126 @@ async function renameContact(contactRowId) {
   setEditingContactId(null);
   setEditingContactName("");
 }
+  
   async function addContact() {
     if (!searchResult) return;
 
+    setContactError("");
+
+    // Check whether this person is already a contact.
+    const alreadyContact = contacts.some(
+      (contact) => contact.contact_id === searchResult.id
+    );
+
+    if (alreadyContact) {
+      setContactError("This person is already a contact.");
+      return;
+    }
+
+    // Send an invitation instead of adding them immediately.
+    const { error } = await supabase
+      .from("contact_invites")
+      .insert({
+        sender_id: user.id,
+        receiver_id: searchResult.id,
+      });
+
+    if (error) {
+      if (error.code === "23505") {
+        setContactError("An invitation has already been sent.");
+      } else {
+        setContactError(error.message);
+      }
+      return;
+    }
+
+    setSearchResult(null);
+    setContactSearch("");
+
+    alert("Contact invitation sent!");
+  }
+
+
+
+  async function acceptContactInvite(invite) {
+    if (!invite?.sender_id || !invite.sender) return;
+
+    setInviteError("");
+
+    // 1. Add the sender to your contacts.
     const { data, error } = await supabase
       .from("contacts")
       .insert({
         user_id: user.id,
-        contact_id: searchResult.id,
+        contact_id: invite.sender_id,
       })
       .select(
-        "id, contact_id, profiles:contact_id(id, username)"
+        "id, contact_id, nickname, profiles:contact_id(id, username)"
       )
       .single();
 
     if (error) {
       if (error.code === "23505") {
-        setContactError(
-          "This person is already in your contacts."
-        );
+        setInviteError("This person is already a contact.");
       } else {
-        console.error(
-          "Error adding contact:",
-          error
-        );
-        setContactError(error.message);
+        setInviteError(error.message);
       }
-
       return;
     }
 
-    setContacts((currentContacts) => [
-      ...currentContacts,
-      data,
-    ]);
+    // 2. Remove the accepted invitation.
+    const { data: deleted, error: deleteError } =
+      await supabase
+        .from("contact_invites")
+        .delete()
+        .eq("id", invite.id)
+        .eq("receiver_id", user.id)
+        .select("id");
 
-    setSearchResult(null);
-    setContactSearch("");
+    if (deleteError || !deleted?.length) {
+      // Do not leave the contact added if acceptance failed.
+      await supabase
+        .from("contacts")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("contact_id", invite.sender_id);
 
-    alert("Contact added!");
+      setInviteError(
+        deleteError?.message || "Could not accept this invite."
+      );
+      return;
+    }
+
+    // 3. Update the sidebar immediately.
+    setContacts((current) => [...current, data]);
+
+    setContactInvites((current) =>
+      current.filter((item) => item.id !== invite.id)
+    );
   }
+
+  async function declineContactInvite(invite) {
+    setInviteError("");
+
+    const { data, error } = await supabase
+      .from("contact_invites")
+      .delete()
+      .eq("id", invite.id)
+      .eq("receiver_id", user.id)
+      .select("id");
+
+    if (error || !data?.length) {
+      setInviteError(
+        error?.message || "Could not decline this invite."
+      );
+      return;
+    }
+
+    setContactInvites((current) =>
+      current.filter((item) => item.id !== invite.id)
+    );
+  }
+
 
   async function removeContact(contactId) {
     const { error } = await supabase
@@ -2016,6 +2152,69 @@ async function kickGroupMember(member) {
             </div>
           )}
         </SidebarSection>
+
+
+  {/* CONTACT INVITES */}
+  <SidebarSection
+    icon="✉️"
+    title={`Contact invites${
+      contactInvites.length > 0
+        ? ` (${contactInvites.length})`
+        : ""
+    }`}
+    open={invitesOpen}
+    onToggle={() =>
+      setInvitesOpen((current) => !current)
+    }
+  >
+    {inviteError && (
+      <p className="sidebar-error">{inviteError}</p>
+    )}
+
+    {contactInvites.length === 0 ? (
+      <p className="empty-sidebar-message">
+        No pending contact invites.
+      </p>
+    ) : (
+      contactInvites.map((invite) => (
+        <div className="contact-item" key={invite.id}>
+          <div className="avatar">
+            {invite.sender?.username
+              ?.charAt(0)
+              .toUpperCase() || "?"}
+          </div>
+
+          <div className="contact-details">
+            <strong>
+              {invite.sender?.username || "Unknown user"}
+            </strong>
+
+            <p className="contact-status">
+              Wants to be your contact
+            </p>
+
+            <div className="invite-actions">
+              <button
+                type="button"
+                className="sidebar-primary-button"
+                onClick={() => acceptContactInvite(invite)}
+              >
+                Accept
+              </button>
+
+              <button
+                type="button"
+                onClick={() => declineContactInvite(invite)}
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        </div>
+      ))
+    )}
+  </SidebarSection>
+
 
         {/* =====================================================
             CONTACTS
@@ -2989,7 +3188,7 @@ onToggle={() => {
                 type="button"
                 onClick={addContact}
               >
-                Add
+                Send invite
               </button>
             </div>
           )}

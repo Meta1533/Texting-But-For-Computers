@@ -1930,3 +1930,18 @@ button {
 .rename-contact-form button:hover {
   background: #4b5563;
 }
+
+.invite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.invite-actions button {
+  cursor: pointer;
+}
+
+.invite-actions .sidebar-primary-button {
+  flex: 1;
+}

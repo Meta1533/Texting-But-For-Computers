@@ -1698,62 +1698,96 @@ async function renameContact(contactRowId) {
 
 
 
-  async function acceptContactInvite(invite) {
-    if (!invite?.sender_id || !invite.sender) return;
+```jsx
+async function acceptContactInvite(invite) {
+  if (!invite?.sender_id || !invite.sender) return;
 
-    setInviteError("");
+  setInviteError("");
 
-    // 1. Add the sender to your contacts.
-    const { data, error } = await supabase
+  const senderId = invite.sender_id;
+  const receiverId = user.id;
+
+  // 1. Add the sender to the receiver's contacts.
+  const { error: firstError } = await supabase
+    .from("contacts")
+    .upsert(
+      {
+        user_id: receiverId,
+        contact_id: senderId,
+      },
+      {
+        onConflict: "user_id,contact_id",
+        ignoreDuplicates: true,
+      }
+    );
+
+  if (firstError) {
+    console.error("Error adding sender as contact:", firstError);
+    setInviteError(firstError.message);
+    return;
+  }
+
+  // 2. Add the receiver to the sender's contacts too.
+  const { error: secondError } = await supabase
+    .from("contacts")
+    .upsert(
+      {
+        user_id: senderId,
+        contact_id: receiverId,
+      },
+      {
+        onConflict: "user_id,contact_id",
+        ignoreDuplicates: true,
+      }
+    );
+
+  if (secondError) {
+    console.error("Error adding receiver as contact:", secondError);
+    setInviteError(
+      "The first contact was added, but the mutual contact could not be saved: " +
+        secondError.message
+    );
+    return;
+  }
+
+  // 3. Remove the accepted invitation.
+  const { data: deleted, error: deleteError } = await supabase
+    .from("contact_invites")
+    .delete()
+    .eq("id", invite.id)
+    .eq("receiver_id", receiverId)
+    .select("id");
+
+  if (deleteError || !deleted?.length) {
+    console.error("Error removing accepted invite:", deleteError);
+    setInviteError(
+      deleteError?.message ||
+        "Contacts were added, but the invitation could not be removed."
+    );
+    return;
+  }
+
+  // 4. Refresh the accepting user's contacts.
+  const { data: refreshedContacts, error: refreshError } =
+    await supabase
       .from("contacts")
-      .insert({
-        user_id: user.id,
-        contact_id: invite.sender_id,
-      })
       .select(
         "id, contact_id, nickname, profiles:contact_id(id, username)"
       )
-      .single();
+      .eq("user_id", receiverId);
 
-    if (error) {
-      if (error.code === "23505") {
-        setInviteError("This person is already a contact.");
-      } else {
-        setInviteError(error.message);
-      }
-      return;
-    }
-
-    // 2. Remove the accepted invitation.
-    const { data: deleted, error: deleteError } =
-      await supabase
-        .from("contact_invites")
-        .delete()
-        .eq("id", invite.id)
-        .eq("receiver_id", user.id)
-        .select("id");
-
-    if (deleteError || !deleted?.length) {
-      // Do not leave the contact added if acceptance failed.
-      await supabase
-        .from("contacts")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("contact_id", invite.sender_id);
-
-      setInviteError(
-        deleteError?.message || "Could not accept this invite."
-      );
-      return;
-    }
-
-    // 3. Update the sidebar immediately.
-    setContacts((current) => [...current, data]);
-
-    setContactInvites((current) =>
-      current.filter((item) => item.id !== invite.id)
-    );
+  if (refreshError) {
+    console.error("Error refreshing contacts:", refreshError);
+  } else {
+    setContacts(refreshedContacts || []);
   }
+
+  // 5. Remove the invitation from the sidebar.
+  setContactInvites((current) =>
+    current.filter((item) => item.id !== invite.id)
+  );
+}
+```
 
   async function declineContactInvite(invite) {
     setInviteError("");

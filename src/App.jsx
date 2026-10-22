@@ -180,6 +180,7 @@ useEffect(() => {
   const [usernameError, setUsernameError] = useState("");
   const [contactSearch, setContactSearch] = useState("");
   const [contacts, setContacts] = useState([]);
+  const [contactListSearch, setContactListSearch] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [contactInvites, setContactInvites] = useState([]);
 const [invitesOpen, setInvitesOpen] = useState(false);
@@ -2300,14 +2301,52 @@ onToggle={() => {
   }
 }}
         >
+          <input
+  type="text"
+  className="contact-search-input"
+  placeholder="🔍 Search contacts..."
+  value={contactListSearch}
+  onChange={(event) =>
+    setContactListSearch(event.target.value)
+  }
+  onClick={(event) => event.stopPropagation()}
+  aria-label="Search your contacts"
+/>
           {contacts.length === 0 ? (
             <p className="empty-sidebar-message">
               No contacts yet.
             </p>
           ) : (
-            contacts
+
+contacts
   .slice()
   .sort((a, b) => {
+    // Get the search text.
+    const search = contactListSearch
+      .trim()
+      .toLowerCase();
+
+    // Get each contact's displayed name.
+    const nameA = (
+      a.nickname?.trim() || a.profiles.username || ""
+    ).toLowerCase();
+
+    const nameB = (
+      b.nickname?.trim() || b.profiles.username || ""
+    ).toLowerCase();
+
+    // Matching contacts go to the top.
+    const matchA =
+      search !== "" && nameA.includes(search);
+
+    const matchB =
+      search !== "" && nameB.includes(search);
+
+    if (matchA !== matchB) {
+      return matchA ? -1 : 1;
+    }
+
+    // Keep your existing unread-message sorting.
     const unreadA =
       unreadCounts[a.profiles.id] || 0;
 
@@ -2317,6 +2356,7 @@ onToggle={() => {
     return unreadB - unreadA;
   })
   .map((contact) => {
+
               const contactId =
                 contact.profiles.id;
 

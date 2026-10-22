@@ -1960,3 +1960,22 @@ button {
   color: #888;
   white-space: nowrap;
 }
+
+.contact-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.contact-search-input:focus {
+  border-color: var(--primary);
+}
+
+.contact-search-input::placeholder {
+  color: #9ca3af;
+}

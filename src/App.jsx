@@ -1711,18 +1711,13 @@ async function acceptContactInvite(invite) {
 
   try {
     // Add the sender to the receiver's contacts.
-    const { error: firstError } = await supabase
-      .from("contacts")
-      .upsert(
-        {
-          user_id: receiverId,
-          contact_id: senderId,
-        },
-        {
-          onConflict: "user_id,contact_id",
-          ignoreDuplicates: true,
-        }
-      );
+    
+const { error } = await supabase.rpc("accept_contact_invite", {
+  p_invite_id: invite.id,
+});
+
+if (error) throw error;
+
 
     if (firstError) throw firstError;
 

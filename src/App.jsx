@@ -3423,26 +3423,31 @@ onToggle={() => {
   <div ref={messagesEndRef} />
 </section>
 
-        <div className="message-box">
-          <input
-  type="text"
-  placeholder="Type a message..."
-  value={message}
-  onChange={(event) => {
-    setMessage(event.target.value);
-    handleTyping();
-  }}
-  onKeyDown={(event) => {
-    if (event.key === "Enter") {
-  sendMessage();
-}
-  }}
-/>
+<div className="message-box">
+  <input
+    type="text"
+    placeholder="Type a message..."
+    value={message}
+    maxLength={200}
+    onChange={(event) => {
+      setMessage(event.target.value);
+      handleTyping();
+    }}
+    onKeyDown={(event) => {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    }}
+  />
 
-          <button onClick={sendMessage}>
-            Send
-          </button>
-        </div>
+  <span className="character-count">
+    {message.length}/200
+  </span>
+
+  <button onClick={sendMessage}>
+    Send
+  </button>
+</div>
       </main>
     </div>
   );

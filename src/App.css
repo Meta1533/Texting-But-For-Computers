@@ -1955,3 +1955,8 @@ button {
 .invite-actions button:hover {
   opacity: 0.8;
 }
+.character-count {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+}

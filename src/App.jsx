@@ -2519,20 +2519,36 @@ onToggle={() => {
             GROUPS
             ===================================================== */}
 
-        <SidebarSection
-          icon="👨‍👩‍👧"
-          title={`Group chats${
-  totalUnreadGroupMessages > 0
-    ? ` (${totalUnreadGroupMessages})`
-    : ""
-}`}
-          open={groupsOpen}
-          onToggle={() =>
-            setGroupsOpen(
-              (current) => !current
-            )
-          }
-        >
+        
+<SidebarSection
+  icon="👨‍👩‍👧"
+  title={`Group chats${
+    totalUnreadGroupMessages > 0
+      ? ` (${totalUnreadGroupMessages})`
+      : ""
+  }`}
+  open={groupsOpen}
+  onToggle={() => {
+    const isClosing = groupsOpen;
+
+    // Open or close the group chats section.
+    setGroupsOpen((current) => !current);
+
+    // Only close the conversation when collapsing group chats.
+    if (isClosing) {
+      stopTyping();
+      setSelectedGroup(null);
+      setSelectedContact(null);
+      setMessages([]);
+      setMessage("");
+      setGroupMembers([]);
+      setGroupMembersOpen(false);
+      setShowAddMembers(false);
+      setOtherUserTyping(false);
+    }
+  }}
+>
+
           <button
             type="button"
             className="create-group-button"

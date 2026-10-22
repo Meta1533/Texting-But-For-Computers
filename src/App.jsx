@@ -710,6 +710,48 @@ useEffect(() => {
   }, [user.id]);
 
 
+  // Realtime: refresh contacts when a contact is added.
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`contacts-realtime-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "contacts",
+          filter: `user_id=eq.${user.id}`,
+        },
+        async () => {
+          const { data, error } = await supabase
+            .from("contacts")
+            .select(
+              "id, contact_id, nickname, profiles:contact_id(id, username)"
+            )
+            .eq("user_id", user.id);
+
+          if (error) {
+            console.error(
+              "Error refreshing contacts in realtime:",
+              error
+            );
+            return;
+          }
+
+          setContacts(data || []);
+        }
+      )
+      .subscribe((status) => {
+        console.log("Contacts realtime status:", status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user.id]);
+
  
   // Load incoming contact invites
   async function loadContactInvites() {
@@ -1698,6 +1740,7 @@ async function renameContact(contactRowId) {
 
 
 
+
 async function acceptContactInvite(invite) {
   if (!invite?.id || !invite?.sender_id || !user?.id) {
     setInviteError("Invalid contact invitation.");
@@ -1706,58 +1749,24 @@ async function acceptContactInvite(invite) {
 
   setInviteError("");
 
-  const senderId = invite.sender_id;
-  const receiverId = user.id;
-
   try {
-    // Add the sender to the receiver's contacts.
-    
-const { error } = await supabase.rpc("accept_contact_invite", {
-  p_invite_id: invite.id,
-});
+    const { error } = await supabase.rpc(
+      "accept_contact_invite",
+      { p_invite_id: invite.id }
+    );
 
-if (error) throw error;
+    if (error) throw error;
 
-
-    if (firstError) throw firstError;
-
-    // Add the receiver to the sender's contacts.
-    const { error: secondError } = await supabase
+    const { data, error: refreshError } = await supabase
       .from("contacts")
-      .upsert(
-        {
-          user_id: senderId,
-          contact_id: receiverId,
-        },
-        {
-          onConflict: "user_id,contact_id",
-          ignoreDuplicates: true,
-        }
-      );
-
-    if (secondError) throw secondError;
-
-    // Remove the accepted invitation.
-    const { error: deleteError } = await supabase
-      .from("contact_invites")
-      .delete()
-      .eq("id", invite.id)
-      .eq("receiver_id", receiverId);
-
-    if (deleteError) throw deleteError;
-
-    // Refresh the receiver's contacts.
-    const { data: refreshedContacts, error: refreshError } =
-      await supabase
-        .from("contacts")
-        .select(
-          "id, contact_id, nickname, profiles:contact_id(id, username)"
-        )
-        .eq("user_id", receiverId);
+      .select(
+        "id, contact_id, nickname, profiles:contact_id(id, username)"
+      )
+      .eq("user_id", user.id);
 
     if (refreshError) throw refreshError;
 
-    setContacts(refreshedContacts || []);
+    setContacts(data || []);
 
     setContactInvites((current) =>
       current.filter((item) => item.id !== invite.id)
@@ -1769,6 +1778,7 @@ if (error) throw error;
     );
   }
 }
+
 
   async function declineContactInvite(invite) {
     setInviteError("");

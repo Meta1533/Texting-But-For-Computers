@@ -3282,19 +3282,17 @@ contacts
             )
           }
         >
-          <input
-        
-        type="text"
-        placeholder="Search username..."
-        value={contactSearch}
-            onChange={(event) => {
-              setContactSearch(
-                event.target.value
-              );
-              setContactError("");
-              setSearchResult(null);
-            }}
-          />
+         <input
+  type="text"
+  className="contact-search-input"
+  placeholder="🔍 Search username..."
+  value={contactSearch}
+  onChange={(event) => {
+    setContactSearch(event.target.value);
+    setContactError("");
+    setSearchResult(null);
+  }}
+/>
 
           <button
             type="button"
@@ -3351,19 +3349,17 @@ contacts
           }}
         >
           <input
-
   type="text"
+  className="contact-search-input"
   placeholder="New username"
   value={newUsername}
-            onChange={(event) => {
-              setNewUsername(
-                event.target.value
-              );
-              setUsernameError("");
-            }}
-            minLength={3}
-            maxLength={20}
-          />
+  onChange={(event) => {
+    setNewUsername(event.target.value);
+    setUsernameError("");
+  }}
+  minLength={3}
+  maxLength={20}
+/>
 
           <button
             type="button"

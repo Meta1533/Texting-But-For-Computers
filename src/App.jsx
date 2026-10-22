@@ -183,14 +183,15 @@ useEffect(() => {
   const [contactListSearch, setContactListSearch] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [contactInvites, setContactInvites] = useState([]);
-const [invitesOpen, setInvitesOpen] = useState(false);
-const [inviteError, setInviteError] = useState("");
+  onst [invitesOpen, setInvitesOpen] = useState(false);
+  const [inviteError, setInviteError] = useState("");
   const [contactError, setContactError] = useState("");
   const [editingContactId, setEditingContactId] = useState(null);
   const [editingContactName, setEditingContactName] = useState("");
   const [selectedContact, setSelectedContact] = useState(null);
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [groupListSearch, setGroupListSearch] = useState("");
   const [groupName, setGroupName] = useState("");
   const [groupError, setGroupError] = useState("");
   const [groupMembers, setGroupMembers] = useState([]);
@@ -2642,15 +2643,44 @@ contacts
           <div className="subsection-label">
             Your groups
           </div>
-
+<input
+  type="text"
+  className="contact-search-input"
+  placeholder="🔍 Search group chats..."
+  value={groupListSearch}
+  onChange={(event) =>
+    setGroupListSearch(event.target.value)
+  }
+  onClick={(event) => event.stopPropagation()}
+  aria-label="Search group chats"
+/>
           {groups.length === 0 ? (
             <p className="empty-sidebar-message">
               No groups yet.
             </p>
           ) : (
-            groups
+           groups
   .slice()
   .sort((a, b) => {
+    const search = groupListSearch
+      .trim()
+      .toLowerCase();
+
+    const nameA = (a.name || "").toLowerCase();
+    const nameB = (b.name || "").toLowerCase();
+
+    const matchA =
+      search !== "" && nameA.includes(search);
+
+    const matchB =
+      search !== "" && nameB.includes(search);
+
+    // Put matching group names first.
+    if (matchA !== matchB) {
+      return matchA ? -1 : 1;
+    }
+
+    // Within each group, keep unread chats first.
     const unreadA =
       groupUnreadCounts[a.id] || 0;
 

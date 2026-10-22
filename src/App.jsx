@@ -710,56 +710,63 @@ useEffect(() => {
   }, [user.id]);
 
 
+ 
   // Load incoming contact invites
-  useEffect(() => {
-    async function loadContactInvites() {
-      const { data, error } = await supabase
-        .from("contact_invites")
-        .select("id, sender_id, created_at")
-        .eq("receiver_id", user.id)
-        .order("created_at", { ascending: false });
+  async function loadContactInvites() {
+    const { data, error } = await supabase
+      .from("contact_invites")
+      .select("id, sender_id, created_at")
+      .eq("receiver_id", user.id)
+      .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error loading invites:", error);
-        setInviteError(error.message);
-        return;
-      }
-
-      const invites = data || [];
-
-      if (invites.length === 0) {
-        setContactInvites([]);
-        return;
-      }
-
-      const senderIds = [
-        ...new Set(invites.map((invite) => invite.sender_id)),
-      ];
-
-      const { data: profiles, error: profileError } =
-        await supabase
-          .from("profiles")
-          .select("id, username")
-          .in("id", senderIds);
-
-      if (profileError) {
-        console.error("Error loading invite senders:", profileError);
-        setInviteError(profileError.message);
-        return;
-      }
-
-      setContactInvites(
-        invites.map((invite) => ({
-          ...invite,
-          sender: profiles.find(
-            (profile) => profile.id === invite.sender_id
-          ),
-        }))
-      );
+    if (error) {
+      console.error("Error loading invites:", error);
+      setInviteError(error.message);
+      return;
     }
 
+    const invites = data || [];
 
-  // Listen for real-time contact invite changes
+    if (invites.length === 0) {
+      setContactInvites([]);
+      setInviteError("");
+      return;
+    }
+
+    const senderIds = [
+      ...new Set(invites.map((invite) => invite.sender_id)),
+    ];
+
+    const { data: profiles, error: profileError } =
+      await supabase
+        .from("profiles")
+        .select("id, username")
+        .in("id", senderIds);
+
+    if (profileError) {
+      console.error("Error loading invite senders:", profileError);
+      setInviteError(profileError.message);
+      return;
+    }
+
+    setInviteError("");
+
+    setContactInvites(
+      invites.map((invite) => ({
+        ...invite,
+        sender: (profiles || []).find(
+          (profile) => profile.id === invite.sender_id
+        ),
+      }))
+    );
+  }
+
+  // Load invites on startup
+  useEffect(() => {
+    loadContactInvites();
+  }, [user.id]);
+
+  // Refresh invites when Supabase reports a database change
   useEffect(() => {
     const channel = supabase
       .channel(`contact-invites-${user.id}`)
@@ -770,21 +777,19 @@ useEffect(() => {
           schema: "public",
           table: "contact_invites",
         },
-        (payload) => {
-          // Reload the list whenever an invite changes
+        () => {
           loadContactInvites();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Contact invites realtime:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user.id]);
 
-
-    loadContactInvites();
-  }, [user.id]);
 
 
   useEffect(() => {
@@ -2239,7 +2244,6 @@ async function kickGroupMember(member) {
       ))
     )}
   </SidebarSection>
-
 
         {/* =====================================================
             CONTACTS

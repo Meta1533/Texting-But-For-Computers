@@ -1931,27 +1931,12 @@ button {
   background: #4b5563;
 }
 
-.invite-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.invite-actions button {
-  cursor: pointer;
-}
-
-.invite-actions .sidebar-primary-button {
-  flex: 1;
-}
-
-/* Contact invitation buttons */
+/* Contact invite buttons */
 .invite-actions {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
   width: 100%;
+  margin-top: 8px;
 }
 
 .invite-actions button {
@@ -1959,25 +1944,14 @@ button {
   padding: 8px 12px;
   border: none;
   border-radius: 6px;
+  background: var(--primary, #6366f1);
+  color: white;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
 
-/* Accept button */
-.invite-actions .sidebar-primary-button {
-  background-color: #6366f1;
-  color: white;
-}
-
-/* Decline button */
-.invite-actions button:not(.sidebar-primary-button) {
-  background-color: #6366f1;
-  color: white;
-}
-
-/* Both buttons */
 .invite-actions button:hover {
   opacity: 0.8;
 }

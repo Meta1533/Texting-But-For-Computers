@@ -160,6 +160,12 @@ function Chat({ user }) {
     link: [
       "cb0ff49d-c90a-4139-83c7-aae4ae9446dd",
     ],
+    the_shark: [
+      "6444c0c9-92b1-4549-afcc-35b1c0e6576a",
+    ],
+    DBS: [
+      "d474fdd3-a99d-4687-aa77-1c4371357eed",
+    ],
   };
 const [currentTime, setCurrentTime] = useState(Date.now());
 
@@ -3522,7 +3528,17 @@ contacts
 export default App;
 
 const USER_TAGS = {
-   link: {
+   DBS: {
+    label: "DBS",
+    emoji: "✏️"
+  }, 
+  
+  the_shark: {
+    label: "The Shark",
+    emoji: "🦈",
+  }, 
+  
+  link: {
     label: "Link",
     emoji: "⚔️",
   }, 

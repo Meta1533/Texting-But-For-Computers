@@ -31,12 +31,15 @@ const BANNED_WORDS = [
   "pussy",
   "vagina",
   "penis",
-  "pp",
+  "pp ",
   "moan",
   "jesus",
   "sin",
   "prick",
   "gay",
+  "handjob",
+   "kill",
+   "balls",
 ];
 
 const USER_STATUSES = {
@@ -63,6 +66,10 @@ const USER_STATUSES = {
   studying: {
     label: "Studying",
     emoji: "📚",
+  },
+    ltm: {
+    label: "Listening to music",
+    emoji: "🎵",
   },
 };
 
@@ -3662,11 +3669,6 @@ const USER_TAGS = {
   barely_functioning: {
     label: "Barely Functioning",
     emoji: "🫠",
-  },
-
-  farmer: {
-    label: "Farmer",
-    emoji: "🐎",
   },
 
   vibing: {

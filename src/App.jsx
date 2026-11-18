@@ -2327,41 +2327,52 @@ onToggle={() => {
 
 contacts
   .slice()
-  .sort((a, b) => {
-    // Get the search text.
-    const search = contactListSearch
-      .trim()
-      .toLowerCase();
 
-    // Get each contact's displayed name.
-    const nameA = (
-      a.nickname?.trim() || a.profiles.username || ""
-    ).toLowerCase();
+.sort((a, b) => {
+  // Check whether each contact is online.
+  const onlineA = !!presenceUsers[a.profiles.id];
+  const onlineB = !!presenceUsers[b.profiles.id];
 
-    const nameB = (
-      b.nickname?.trim() || b.profiles.username || ""
-    ).toLowerCase();
+  // Put online contacts first.
+  if (onlineA !== onlineB) {
+    return onlineA ? -1 : 1;
+  }
 
-    // Matching contacts go to the top.
-    const matchA =
-      search !== "" && nameA.includes(search);
+  // Get the search text.
+  const search = contactListSearch
+    .trim()
+    .toLowerCase();
 
-    const matchB =
-      search !== "" && nameB.includes(search);
+  // Get each contact's displayed name.
+  const nameA = (
+    a.nickname?.trim() || a.profiles.username || ""
+  ).toLowerCase();
 
-    if (matchA !== matchB) {
-      return matchA ? -1 : 1;
-    }
+  const nameB = (
+    b.nickname?.trim() || b.profiles.username || ""
+  ).toLowerCase();
 
-    // Keep your existing unread-message sorting.
-    const unreadA =
-      unreadCounts[a.profiles.id] || 0;
+  // Matching contacts go to the top.
+  const matchA =
+    search !== "" && nameA.includes(search);
 
-    const unreadB =
-      unreadCounts[b.profiles.id] || 0;
+  const matchB =
+    search !== "" && nameB.includes(search);
 
-    return unreadB - unreadA;
-  })
+  if (matchA !== matchB) {
+    return matchA ? -1 : 1;
+  }
+
+  // Keep unread-message sorting.
+  const unreadA =
+    unreadCounts[a.profiles.id] || 0;
+
+  const unreadB =
+    unreadCounts[b.profiles.id] || 0;
+
+  return unreadB - unreadA;
+})
+
   .map((contact) => {
 
               const contactId =

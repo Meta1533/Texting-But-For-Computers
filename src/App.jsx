@@ -10,7 +10,6 @@ const THEMES = {
   orange: "#f97316",
   green: "#22c55e",
   blue: "#3b82f6",
-  pink: "#fd03dc",
 };
 
 const BANNED_WORDS = [

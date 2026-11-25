@@ -6,6 +6,7 @@ function Auth({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(true);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -54,6 +55,29 @@ if (error) {
     }
   }
 
+async function handlePasswordReset() {
+  setError("");
+  setMessage("");
+
+  if (!email.trim()) {
+    setError("Please enter your email address first.");
+    return;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    email.trim(),
+    {
+      redirectTo: window.location.origin,
+    }
+  );
+
+  if (error) {
+    setError(error.message);
+  } else {
+    setMessage("If an account exists with that email, a reset link has been sent.");
+  }
+}
+
   return (
     <div className="auth-page">
       <div className="auth-box">
@@ -97,6 +121,16 @@ if (error) {
 
         {error && <p className="auth-error">{error}</p>}
         {message && <p className="auth-message">{message}</p>}
+
+        {!isSignUp && (
+  <button
+    type="button"
+    className="forgot-password"
+    onClick={handlePasswordReset}
+  >
+    Get Password
+  </button>
+)}
 
         <button
           className="switch-auth"
